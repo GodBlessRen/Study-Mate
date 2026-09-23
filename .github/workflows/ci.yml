@@ -40,6 +40,14 @@ jobs:
         with:
           python-version: ${{ matrix.runtime.python }}
       - run: python -m pip install PyYAML
+      - name: Windows PowerShell 5.1 installer smoke test
+        if: runner.os == 'Windows' && matrix.runtime.node == '22.19.0'
+        shell: powershell
+        run: |
+          $env:DSH_HOME = Join-Path $env:RUNNER_TEMP 'studymate-ps51-home\.dsh'
+          $env:LEARN_WORKSPACE = Join-Path $env:RUNNER_TEMP 'studymate-ps51-workspace'
+          powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Installer regression tests
         run: npm run test:installer
       - name: Python, DOM and release regression tests
