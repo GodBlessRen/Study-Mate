@@ -150,7 +150,7 @@ class PresetTests(unittest.TestCase):
         self.assertEqual(self.patch.read_text(encoding='utf-8'), '[]\n')
 
     def test_profile_names_cannot_escape_or_target_reserved_locations(self):
-        for profile in ['../web', 'a/b', 'a\\b', '.', '..', '', 'node_modules', 'desktop']:
+        for profile in ['../web', 'a/b', 'a\\b', '.', '..', '', 'node_modules']:
             with self.subTest(profile=profile):
                 self.assertIn('--profile', self.invoke(extra=['--profile', profile], success=False))
                 self.assertFalse(self.patch.exists())
@@ -158,6 +158,15 @@ class PresetTests(unittest.TestCase):
         self.invoke(extra=['--profile', custom])
         self.assertTrue((self.home / 'profiles' / custom / 'cordis.patch.yml').exists())
         self.assertFalse(self.patch.exists())
+
+    def test_desktop_is_a_usable_profile_with_its_launcher_spelling(self):
+        """桌面端的保留档位由它自带的启动器引导，只能原样写给 Desktop（首字母大写会建出没人读的目录）。"""
+        self.invoke(extra=['--profile', 'Desktop'])
+        desktop = self.home / 'profiles' / 'desktop' / 'cordis.patch.yml'
+        self.assertTrue(desktop.exists())
+        self.assertFalse(self.patch.exists())
+        # 大小写不敏感的文件系统上只能用目录名核对，路径存在性分辨不出 Desktop 与 desktop。
+        self.assertNotIn('Desktop', [entry.name for entry in (self.home / 'profiles').iterdir()])
 
     def test_source_install_without_dsh_retains_legacy_setup(self):
         result = self.invoke(version=None, env={'PATH': str(self.home / 'no-programs')})

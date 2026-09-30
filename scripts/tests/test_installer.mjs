@@ -5,12 +5,22 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { supportsDsh, findPython } from '../../bin/studymate.mjs';
+import { supportsDsh, findPython, findDsh, isDesktopLauncher, desktopResourceDirs, defaultProfile } from '../../bin/studymate.mjs';
 import { adaptSkill } from '../../bin/skill-compat.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const cli = path.join(root, 'bin/studymate.mjs');
 const python = findPython();
+const launcher = process.platform === 'win32' ? 'dsh.cmd' : 'dsh';
+
+/** Write a runnable dsh at a Desktop-shaped location and return its path. */
+function desktopLauncher(directory, version) {
+  const shim = path.join(directory, 'resources', 'runtime', 'cli', 'bin', launcher);
+  fs.mkdirSync(path.dirname(shim), { recursive: true });
+  fs.writeFileSync(shim, process.platform === 'win32' ? `@echo ${version}\r\n` : `#!/bin/sh\nprintf '%s\\n' '${version}'\n`,
+    { mode: 0o755 });
+  return shim;
+}
 
 function fixture(t) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'studymate-test-'));
@@ -29,6 +39,11 @@ function fixture(t) {
     fs.writeFileSync(path.join(bin, process.platform === 'win32' ? 'dsh.cmd' : 'dsh'),
       process.platform === 'win32' ? `@echo ${value}\r\n` : `#!/bin/sh\nprintf '%s\\n' '${value}'\n`, { mode: 0o755 });
   }
+  // Stands in for a machine with no dsh on PATH: the shim resolves but never answers.
+  function breakDsh() {
+    fs.writeFileSync(path.join(bin, process.platform === 'win32' ? 'dsh.cmd' : 'dsh'),
+      process.platform === 'win32' ? '@exit /b 1\r\n' : '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+  }
   function install(...args) {
     return spawnSync(process.execPath, [cli, 'install', ...args], { cwd: dir, env, encoding: 'utf8', timeout: 30000 });
   }
@@ -39,12 +54,124 @@ function fixture(t) {
     return JSON.parse(result.stdout);
   }
   version('0.1.7-alpha.1');
-  return { dir, home, env, preset, patch, config, version, install, yaml };
+  return { dir, home, env, preset, patch, config, version, breakDsh, install, yaml };
 }
 
 test('minimum DSH prerelease is compared correctly', () => {
   for (const version of ['0.1.5-rc.2', '0.1.5-rc.10', '0.1.5', '0.1.6-alpha.1', '0.1.7-alpha.1']) assert.ok(supportsDsh(version), version);
   for (const version of ['0.1.4', '0.1.5-alpha.9', '0.1.5-rc.1', 'bad']) assert.equal(supportsDsh(version), false, version);
+});
+
+test('desktop installations are recognized on every platform', () => {
+  assert.equal(isDesktopLauncher(path.join('C:\\', 'Program Files', 'DeepSeek Harness',
+    'resources', 'runtime', 'cli', 'bin', 'dsh.cmd')), true);
+  assert.equal(isDesktopLauncher('/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh'), true);
+  assert.equal(isDesktopLauncher(path.join('C:\\', 'Users', 'me', 'AppData', 'Roaming', 'npm', 'dsh.cmd')), false);
+  assert.equal(isDesktopLauncher('/usr/local/bin/dsh'), false);
+
+  const win = desktopResourceDirs({ platform: 'win32', env: { LOCALAPPDATA: 'C:\\local', ProgramFiles: 'C:\\pf' }, home: 'C:\\me' });
+  assert.ok(win.includes(path.join('C:\\local', 'Programs', 'DeepSeek Harness', 'resources')), String(win));
+  assert.ok(win.includes(path.join('C:\\pf', 'DeepSeek Harness', 'resources')), String(win));
+  const mac = desktopResourceDirs({ platform: 'darwin', env: {}, home: '/Users/me' });
+  assert.ok(mac.includes(path.join('/Users/me', 'Applications', 'DeepSeek Harness.app', 'Contents', 'Resources')), String(mac));
+});
+
+test('a runnable dsh is taken from the explicit path, PATH, then the Desktop installation', () => {
+  const env = { LOCALAPPDATA: 'C:\\local', ComSpec: 'cmd.exe' };
+  const shim = path.join(env.LOCALAPPDATA, 'Programs', 'DeepSeek Harness', 'resources', 'runtime', 'cli', 'bin', 'dsh.cmd');
+  // Answer only the launchers named here, the way a real machine would.
+  const answering = (answers) => (command, args) => {
+    const line = [command, ...args].join(' ');
+    for (const [needle, stdout] of answers) if (line.includes(needle)) return { status: 0, stdout };
+    return { status: 1, stdout: '' };
+  };
+
+  // No dsh on PATH: the Desktop launcher is the only one that answers.
+  let found = findDsh({ platform: 'win32', env, home: 'C:\\me',
+    execute: answering([[shim, '0.2.0-rc.2\n']]) });
+  assert.deepEqual({ command: found.command, version: found.version, desktop: found.desktop },
+    { command: shim, version: '0.2.0-rc.2', desktop: true });
+
+  // A Desktop shim earlier on PATH stays Desktop, which decides the profile below.
+  const npmShim = path.join('C:\\local', 'Roaming', 'npm', 'dsh.cmd');
+  found = findDsh({ platform: 'win32', env, home: 'C:\\me', execute: answering([
+    ['"where dsh"', `${shim}\r\n`], ['""dsh" --version"', '0.2.0-rc.2\n']]) });
+  assert.deepEqual({ command: found.command, desktop: found.desktop }, { command: shim, desktop: true });
+
+  // The official CLI keeps its own identity and wins over a Desktop installation.
+  found = findDsh({ platform: 'win32', env, home: 'C:\\me', execute: answering([
+    ['"where dsh"', `${npmShim}\r\n`], ['""dsh" --version"', '0.1.7-alpha.1\n'], [shim, '0.2.0-rc.2\n']]) });
+  assert.deepEqual({ command: found.command, version: found.version, desktop: found.desktop },
+    { command: npmShim, version: '0.1.7-alpha.1', desktop: false });
+
+  // An outdated dsh on PATH cannot serve this preset, so a usable Desktop launcher still wins.
+  found = findDsh({ platform: 'win32', env, home: 'C:\\me', execute: answering([
+    ['"where dsh"', `${npmShim}\r\n`], ['""dsh" --version"', '0.1.4\n'], [shim, '0.2.0-rc.2\n']]) });
+  assert.deepEqual({ command: found.command, version: found.version, desktop: found.desktop },
+    { command: shim, version: '0.2.0-rc.2', desktop: true });
+  // With nothing usable the outdated launcher is reported, not silently replaced by web.
+  found = findDsh({ platform: 'win32', env, home: 'C:\\me', execute: answering([
+    ['"where dsh"', `${npmShim}\r\n`], ['""dsh" --version"', '0.1.4\n']]) });
+  assert.deepEqual({ version: found.version, desktop: found.desktop }, { version: '0.1.4', desktop: false });
+
+  // An explicit launcher is tried first, and a failed probe is reported, not guessed.
+  found = findDsh({ platform: 'win32', env, home: 'C:\\me', explicit: shim,
+    execute: answering([[shim, '0.2.0-rc.2\n']]) });
+  assert.deepEqual({ command: found.command, desktop: found.desktop }, { command: path.resolve(shim), desktop: true });
+  found = findDsh({ platform: 'win32', env, home: 'C:\\me', execute: answering([]) });
+  assert.equal(found.version, undefined);
+  assert.equal(found.checked[0], 'dsh');
+});
+
+test('the profile is Desktop, then the profile the last install recorded, then web', () => {
+  assert.equal(defaultProfile({ desktop: true, installModes: { web: 'standalone' } }), 'desktop');
+  assert.equal(defaultProfile({ desktop: false, installModes: { desktop: 'standalone' } }), 'desktop');
+  assert.equal(defaultProfile({ desktop: false, installModes: { web: 'native', desktop: 'standalone' } }), 'web');
+  assert.equal(defaultProfile({ desktop: false, installModes: {} }), 'web');
+});
+
+test('a Desktop launcher registers the learning mode in the reserved desktop profile', t => {
+  const f = fixture(t);
+  const shim = desktopLauncher(path.join(f.dir, 'DeepSeek Harness'), '0.2.0-rc.2');
+  const profile = path.join(f.env.DSH_HOME, 'profiles', 'desktop');
+  fs.mkdirSync(profile, { recursive: true });
+  fs.writeFileSync(path.join(profile, 'package.json'), JSON.stringify({ name: 'dsh-profile-desktop' }));
+  const result = f.install('--dsh', shim, '--workspace', path.join(f.dir, 'workspace'));
+  assert.equal(result.status, 0, result.stderr + result.stdout);
+  assert.equal(f.yaml(path.join(profile, 'cordis.patch.yml'))[0].insert[0].config.id, 'learning');
+  assert.equal(fs.existsSync(f.patch), false, '不该写到 web profile');
+  assert.equal(f.yaml(f.config).installModes.desktop, 'standalone');
+  // 桌面端不认 `dsh web`：收尾提示要指向桌面端自己的重启方式。
+  assert.match(result.stdout, /DeepSeek Harness 桌面端新建会话/);
+});
+
+test('the reserved desktop profile must be initialized by the application first', t => {
+  const f = fixture(t);
+  const shim = desktopLauncher(path.join(f.dir, 'DeepSeek Harness'), '0.2.0-rc.2');
+  const failed = f.install('--dsh', shim, '--workspace', path.join(f.dir, 'workspace'));
+  assert.notEqual(failed.status, 0);
+  assert.match(failed.stderr, /先启动一次 DeepSeek Harness 桌面端/);
+  assert.equal(fs.existsSync(f.config), false);
+  assert.equal(fs.existsSync(path.join(f.env.DSH_HOME, 'studymate')), false);
+});
+
+test('a Desktop installation is found when no dsh is on PATH', { skip: process.platform !== 'win32' && '桌面端候选目录只按 Windows 的安装位置扫描' }, t => {
+  const f = fixture(t);
+  const local = path.join(f.dir, 'local');
+  desktopLauncher(path.join(local, 'Programs', 'DeepSeek Harness'), '0.2.0-rc.2');
+  const profile = path.join(f.env.DSH_HOME, 'profiles', 'desktop');
+  fs.mkdirSync(profile, { recursive: true });
+  fs.writeFileSync(path.join(profile, 'package.json'), JSON.stringify({ name: 'dsh-profile-desktop' }));
+  // Keep the system PATH (Python must stay reachable) but let dsh fail, and point the
+  // Windows installation roots at the fixture so no real Desktop installation decides this.
+  f.breakDsh();
+  const env = { ...f.env, LOCALAPPDATA: local,
+    ProgramFiles: path.join(f.dir, 'pf'), ProgramW6432: path.join(f.dir, 'pf64'), 'ProgramFiles(x86)': path.join(f.dir, 'pf86') };
+  const result = spawnSync(process.execPath, [cli, 'install', '--workspace', path.join(f.dir, 'workspace')],
+    { cwd: f.dir, env, encoding: 'utf8', timeout: 60000 });
+  assert.equal(result.status, 0, result.stderr + result.stdout);
+  assert.equal(f.yaml(path.join(profile, 'cordis.patch.yml'))[0].insert[0].config.id, 'learning');
+  assert.equal(fs.existsSync(f.patch), false, '桌面端的 dsh 被找到时不该退回 web profile');
 });
 
 test('installed skill copies get the write-boundary conventions in machine terms', () => {

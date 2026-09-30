@@ -218,8 +218,12 @@ def install(args):
     workflow = 'ptc' if native or version is not None and at_least(version, '0.1.6-alpha.1') else 'worker-thread'
     home = Path(args.dsh_home).expanduser().absolute()
     profile = args.profile
-    if not profile or '/' in profile or '\\' in profile or '\x00' in profile or profile.lower() in ('.', '..', 'node_modules', 'desktop'):
-        raise ValueError('--profile 必须是单个配置名称，不能包含路径分隔符，也不能使用 node_modules 或 desktop')
+    # The Desktop launcher lowercases its reserved profile; matching it keeps the
+    # written directory identical to the one the application boots.
+    if profile and profile.lower() == 'desktop':
+        profile = 'desktop'
+    if not profile or '/' in profile or '\\' in profile or '\x00' in profile or profile in ('.', '..', 'node_modules'):
+        raise ValueError('--profile 必须是单个配置名称，不能包含路径分隔符，也不能使用 node_modules')
     preset = Path(args.preset_dir) / 'agent.cordis.yml'
     agent = preset.read_text(encoding='utf-8')
     agent = re.sub(r'(@deepseek-ai/dsh-workflow-|\bid: workflow-)(?:worker-thread|ptc)\b',
@@ -227,7 +231,9 @@ def install(args):
     patch = home / 'profiles' / profile / 'cordis.patch.yml'
     selected = bundle_selected(patch.parent)
     if handoff and not selected:
-        raise ValueError(f'请先运行 dsh plugin --profile {profile} add @yunmiao/studymate，再切换原生安装')
+        # Desktop's reserved profile is managed only by the launcher it ships.
+        launcher = '桌面端自带的 dsh' if profile == 'desktop' else 'dsh'
+        raise ValueError(f'请先运行 {launcher} plugin --profile {profile} add @yunmiao/studymate，再切换原生安装')
     bundle = native or handoff
     original = read(patch)
     clean = without_managed(original)

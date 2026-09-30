@@ -16,7 +16,7 @@ const help = `StudyMate ${metadata.version}
 Codex / ChatGPT Work：下载并导入最新插件 ZIP：
 https://github.com/Miaotofu01/Study-Mate/releases/latest/download/studymate-openai.zip
 
-用法：studymate [install] [--workspace <目录>] [--profile <名称>] [--mode standalone|native]
+用法：studymate [install] [--workspace <目录>] [--profile <名称>] [--mode standalone|native] [--dsh <dsh 路径>]
       studymate build-plugin [--output <目录>]（开发者构建）
       studymate build-antigravity [--output <目录>] [--install]（Antigravity 插件构建）
       studymate build-examples [工作区]（重建 examples/ 的示例页面，默认 examples）
@@ -24,7 +24,10 @@ https://github.com/Miaotofu01/Study-Mate/releases/latest/download/studymate-open
 
 将学习模式和引擎安装到 DSH_HOME（默认 ~/.dsh）。
 工作区优先使用 --workspace、LEARN_WORKSPACE、已有配置，首次默认为 ~/StudyMate。
-DSH 0.1.7+ 默认注册到 web profile；其他 profile 用 --profile 指定。
+安装器先找 PATH 里的 dsh，找不到就用 DeepSeek Harness 桌面端自带的 dsh；
+桌面端（或 --dsh 指向桌面端自带的 dsh）默认注册到它的 desktop profile，
+其余情况优先沿用上次安装的 profile，首次默认 web；都可用 --profile 覆盖。
+桌面端装在非默认目录时，用 --dsh "<安装目录>/resources/runtime/cli/bin/dsh.cmd" 指定。
 默认由安装器管理；已添加 DSH 原生插件时，可用 --mode native 显式切换。
 需要 Node.js ^22.19.0 或 >=24、dsh >=0.1.5-rc.2、Python 3.9+ 和 PyYAML。
 安装器不会安装或升级 dsh，也不会重启正在运行的会话。
@@ -35,6 +38,114 @@ build-plugin 供开发者导出 Codex / ChatGPT Work 技能插件目录及 ZIP�
 
 function run(command, args, extra = {}) {
   return spawnSync(command, args, { encoding: 'utf8', timeout: 15000, windowsHide: true, ...extra });
+}
+
+// DeepSeek Harness Desktop ships its own dsh at <resources>/runtime/cli/bin, and
+// rejects its reserved profile from any other launcher. Its Electron guest takes
+// seconds to answer `--version` where the Node CLI takes milliseconds, so give it
+// a wide window instead of timing out on a busy machine.
+function runDesktop(command, args, extra = {}) {
+  return run(command, args, { timeout: 60000, ...extra });
+}
+
+const DESKTOP_LAUNCHER = /\/runtime\/cli\/bin\/dsh(?:\.(?:cmd|bat|ps1|exe|sh))?$/i;
+
+/** Whether a launcher path is the command shim a Desktop installation publishes. */
+export function isDesktopLauncher(file) {
+  return typeof file === 'string' && DESKTOP_LAUNCHER.test(file.replaceAll('\\', '/'));
+}
+
+/**
+ * Resources directories an installed Desktop application can occupy, nearest first.
+ * Every platform keeps its command shim at <resources>/runtime/cli/bin, so finding
+ * the directory is enough to use that installation regardless of where it lives.
+ */
+export function desktopResourceDirs({ platform = process.platform, env = process.env, home = os.homedir() } = {}) {
+  const dirs = [];
+  const add = (value) => { if (value && !dirs.includes(value)) dirs.push(value); };
+  const scan = (parent, names, suffix) => {
+    if (!parent) return;
+    for (const name of names) add(path.join(parent, name, suffix));
+    let entries;
+    try { entries = fs.readdirSync(parent, { withFileTypes: true }); } catch { return; }
+    for (const entry of entries) {
+      if (entry.isDirectory() && /harness|deepseek/i.test(entry.name)) add(path.join(parent, entry.name, suffix));
+    }
+  };
+  if (platform === 'win32') {
+    for (const parent of [env.LOCALAPPDATA && path.join(env.LOCALAPPDATA, 'Programs'),
+      env.ProgramW6432, env.ProgramFiles, env['ProgramFiles(x86)']]) {
+      scan(parent, ['DeepSeek Harness'], 'resources');
+    }
+  } else if (platform === 'darwin') {
+    for (const parent of ['/Applications', path.join(home, 'Applications')]) {
+      scan(parent, ['DeepSeek Harness.app', 'DeepSeek Harness'], path.join('Contents', 'Resources'));
+    }
+  } else {
+    for (const parent of ['/opt', '/usr/local/lib', '/usr/lib']) {
+      scan(parent, ['DeepSeek Harness', 'deepseek-harness'], 'resources');
+    }
+  }
+  return dirs;
+}
+
+/** Run one `dsh --version` probe; an unrunnable or silent launcher yields no version. */
+function dshVersion(command, { platform, env, execute = runDesktop }) {
+  // npm and Desktop both publish dsh.cmd on Windows; `/s` keeps the launcher's own
+  // quotes intact so an installation path containing spaces still runs. No user input.
+  const quoted = `""${command}" --version"`;
+  const result = platform === 'win32'
+    ? execute(env.ComSpec || process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', quoted], { windowsVerbatimArguments: true })
+    : execute(command, ['--version']);
+  if (result.error || result.status !== 0) return undefined;
+  const version = result.stdout?.trim();
+  return version || undefined;
+}
+
+/** Where a bare command resolves to, so a Desktop shim on PATH is recognized as one. */
+function resolveOnPath(command, { platform, env = process.env, execute = run } = {}) {
+  const result = platform === 'win32'
+    ? execute(env.ComSpec || process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', `"where ${command}"`], { windowsVerbatimArguments: true })
+    : execute('sh', ['-c', `command -v ${command}`]);
+  if (result.error || result.status !== 0) return undefined;
+  return result.stdout?.split(/\r?\n/).map(line => line.trim()).find(Boolean);
+}
+
+/**
+ * Find a runnable dsh: the explicit launcher, the one on PATH, or a Desktop installation.
+ * @returns the launcher, its version, whether it belongs to Desktop, and everything checked.
+ */
+export function findDsh({ platform = process.platform, env = process.env, home = os.homedir(), execute, explicit } = {}) {
+  const shim = platform === 'win32' ? 'dsh.cmd' : 'dsh';
+  const candidates = [];
+  const consider = (command, desktop) => {
+    if (command && !candidates.some(candidate => candidate.command === command)) candidates.push({ command, desktop });
+  };
+  if (explicit) consider(/[/\\]/.test(explicit) ? absolute(explicit) : explicit, isDesktopLauncher(explicit));
+  consider('dsh', false);
+  for (const resources of desktopResourceDirs({ platform, env, home })) {
+    consider(path.join(resources, 'runtime', 'cli', 'bin', shim), true);
+  }
+  let outdated;
+  for (const candidate of candidates) {
+    const version = dshVersion(candidate.command, { platform, env, execute });
+    if (!version) continue;
+    const resolved = candidate.command === 'dsh'
+      ? resolveOnPath('dsh', { platform, env, execute }) || candidate.command : candidate.command;
+    const found = { command: resolved, version, desktop: candidate.desktop || isDesktopLauncher(resolved) };
+    // A launcher too old for this preset is not a usable answer: a Desktop
+    // installation further down the list can still serve, and when none can, the
+    // first one that answered carries the version the caller must report.
+    if (supportsDsh(version)) return found;
+    outdated ??= found;
+  }
+  if (outdated) return outdated;
+  return { command: undefined, version: undefined, desktop: false,
+    checked: candidates.map(candidate => candidate.command),
+    // A launcher that is installed but never answers is a different problem from a
+    // missing one, so the caller can tell "install dsh" from "it would not start".
+    silent: candidates.filter(candidate => fs.existsSync(candidate.command))
+      .map(candidate => candidate.command) };
 }
 
 export function supportsDsh(value) {
@@ -106,23 +217,27 @@ export function findPython(platform = process.platform, execute = run) {
   throw new Error(`没有找到可用的 Python 3.9+（已检查 ${checked}）。请安装 Python 3.9+，并确认能从终端运行。`);
 }
 
-function checkDependencies() {
+function checkDependencies({ explicit } = {}) {
   const [major, minor] = process.versions.node.split('.').map(Number);
   if (!(major >= 24 || (major === 22 && minor >= 19))) {
     throw new Error('需要 Node.js ^22.19.0 或 >=24，请先升级 Node.js。');
   }
-  // npm's Windows entry point is dsh.cmd; the shell receives no user input.
-  const dsh = process.platform === 'win32'
-    ? run(process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', '"dsh --version"'], { windowsVerbatimArguments: true })
-    : run('dsh', ['--version']);
-  const version = dsh.stdout?.trim();
-  if (dsh.status !== 0 || !version) {
-    throw new Error('找不到可运行的 dsh。请先运行 npm install -g @deepseek-ai/dsh@latest，再重试。');
+  const dsh = findDsh({ explicit });
+  if (!dsh.version) {
+    const present = dsh.silent.length
+      ? `\n以下 dsh 已经安装但没能运行（桌面端首次启动较慢，也可能被安全软件拦下）：\n${dsh.silent.map(file => `  ${file}`).join('\n')}\n` : '';
+    throw new Error('找不到可运行的 dsh。二选一后重试：\n' +
+      '1. 桌面端：确认 DeepSeek Harness 能正常启动（安装器会自动使用它自带的 dsh）；' +
+      '装在非默认目录时用 --dsh "<安装目录>/resources/runtime/cli/bin/dsh.cmd" 指定。\n' +
+      '2. 官方 CLI：npm install -g @deepseek-ai/dsh@latest\n' + present +
+      `已检查：${[...new Set(['PATH 中的 dsh', ...dsh.checked])].join('、')}`);
   }
-  if (!supportsDsh(version)) {
-    throw new Error(`dsh ${version} 不支持此学习预设，需要 >=0.1.5-rc.2。请运行 npm install -g @deepseek-ai/dsh@latest。`);
+  if (!supportsDsh(dsh.version)) {
+    throw new Error(`dsh ${dsh.version} 不支持此学习预设，需要 >=0.1.5-rc.2。` + (dsh.desktop
+      ? '请升级 DeepSeek Harness 桌面端。'
+      : '请运行 npm install -g @deepseek-ai/dsh@latest。'));
   }
-  return { python: findPython(), version };
+  return { python: findPython(), version: dsh.version, desktop: dsh.desktop };
 }
 
 function absolute(value) {
@@ -176,27 +291,44 @@ function copyPayload(destination) {
   }
 }
 
+/**
+ * Which profile an install without --profile serves: the Desktop harness we
+ * resolved, then the profile the last install used, then the CLI default.
+ */
+export function defaultProfile({ desktop, installModes }) {
+  if (desktop) return 'desktop';
+  const recorded = Object.keys(installModes);
+  return recorded.length === 1 ? recorded[0] : 'web';
+}
+
 // Shared by the CLI and the DSH bundle. Native loading already runs inside DSH;
 // it must not launch a second, possibly different dsh executable from PATH.
-export function installPayload({ workspaceArg, profile = 'web', python, version,
+export function installPayload({ workspaceArg, profile, python, version, desktop = false,
   dshHome = absolute(process.env.DSH_HOME || path.join(os.homedir(), '.dsh')), native = false, mode = 'standalone' }) {
   if (!['standalone', 'native'].includes(mode) || native && mode !== 'standalone') {
     throw new Error('--mode 必须是 standalone 或 native；原生启动不执行安装方式切换。');
-  }
-  if (!profile || /[/\\\0]/.test(profile) || ['.', '..', 'node_modules', 'desktop'].includes(profile)) {
-    throw new Error('--profile 必须是单个 DSH 配置名称，不能使用路径或保留名称。');
   }
   python ??= findPython();
   dshHome = absolute(dshHome);
   const configFile = path.join(dshHome, 'studymate-config.yaml');
   const config = readConfig(configFile, python);
-  const workspace = absolute(workspaceArg || process.env.LEARN_WORKSPACE || config.workspace || path.join(os.homedir(), 'StudyMate'));
-  const engine = path.join(dshHome, 'studymate', 'engine');
-  const preset = path.join(dshHome, '.agent-presets', 'learning');
   const installModes = config.installModes ?? {};
   if (typeof installModes !== 'object' || Array.isArray(installModes)) {
     throw new Error('配置中的 installModes 必须是按 profile 记录安装方式的对象。');
   }
+  profile ??= defaultProfile({ desktop, installModes });
+  // The Desktop launcher lowercases its reserved profile, so match it on disk.
+  if (profile.toLowerCase() === 'desktop') profile = 'desktop';
+  if (!profile || /[/\\\0]/.test(profile) || ['.', '..', 'node_modules'].includes(profile)) {
+    throw new Error('--profile 必须是单个 DSH 配置名称，不能使用路径或保留名称。');
+  }
+  // Desktop refuses to manage a profile it has not initialized yet.
+  if (profile === 'desktop' && !fs.existsSync(path.join(dshHome, 'profiles', 'desktop', 'package.json'))) {
+    throw new Error('桌面端配置尚未初始化：请先启动一次 DeepSeek Harness 桌面端，再重新运行安装命令。');
+  }
+  const workspace = absolute(workspaceArg || process.env.LEARN_WORKSPACE || config.workspace || path.join(os.homedir(), 'StudyMate'));
+  const engine = path.join(dshHome, 'studymate', 'engine');
+  const preset = path.join(dshHome, '.agent-presets', 'learning');
   const installedMode = installModes[profile];
   if (native && (installedMode === 'standalone' ||
       installedMode !== 'native' && fs.existsSync(preset))) {
@@ -309,15 +441,19 @@ export function installPayload({ workspaceArg, profile = 'web', python, version,
   } finally {
     if (!preserveStaging) fs.rmSync(staging, { recursive: true, force: true });
   }
-  return { registration, engine, preset, configFile, workspace: config.workspace };
+  return { registration, engine, preset, configFile, workspace: config.workspace, profile };
 }
 
-function install(workspaceArg, profile, mode) {
-  const { python, version } = checkDependencies();
-  const { registration, engine, preset, configFile, workspace } = installPayload({ workspaceArg, profile, python, version, mode });
-  const registered = registration.mode === 'bundle' ? `\n学习模式由 DSH 插件管理：${profile}`
-    : registration.mode === 'declarative' ? `\n已注册到 DSH profile：${profile}` : '';
-  console.log(`StudyMate ${metadata.version} 安装完成。\n引擎：${engine}\n学习预设：${preset}${registered}\n学习工作区：${workspace}\n配置：${configFile}\n请在 dsh 中新建会话并选择“学习模式”；已运行的 dsh 如未显示该模式，请重启。\n启动会话时把工作目录设为 ${workspace}，并把会话权限选成 workspace-write 或 danger-full-access：学习数据都写在那个目录里，会话目录不在它里面时，每次落盘都会要求你授权。`);
+function install(workspaceArg, profile, mode, dshArg) {
+  const { python, version, desktop } = checkDependencies({ explicit: dshArg });
+  const { registration, engine, preset, configFile, workspace, profile: target } =
+    installPayload({ workspaceArg, profile, python, version, desktop, mode });
+  const registered = registration.mode === 'bundle' ? `\n学习模式由 DSH 插件管理：${target}`
+    : registration.mode === 'declarative' ? `\n已注册到 DSH profile：${target}` : '';
+  const next = desktop
+    ? '请在 DeepSeek Harness 桌面端新建会话并选择“学习模式”；桌面端正在运行时请完全退出后重新打开，改动在重启后生效。'
+    : '请在 dsh 中新建会话并选择“学习模式”；已运行的 dsh 如未显示该模式，请重启。';
+  console.log(`StudyMate ${metadata.version} 安装完成。\n引擎：${engine}\n学习预设：${preset}${registered}\n学习工作区：${workspace}\n配置：${configFile}\n${next}\n启动会话时把工作目录设为 ${workspace}，并把会话权限选成 workspace-write 或 danger-full-access：学习数据都写在那个目录里，会话目录不在它里面时，每次落盘都会要求你授权。`);
 }
 
 export function main(args = process.argv.slice(2)) {
@@ -356,19 +492,21 @@ export function main(args = process.argv.slice(2)) {
     }
     else {
       if (args[0] === 'install') args.shift();
-      let workspace, profile = 'web', mode = 'standalone';
+      let workspace, profile, mode = 'standalone', dsh;
       const seen = new Set();
+      const options = ['--workspace', '--profile', '--mode', '--dsh'];
       for (let i = 0; i < args.length; i += 2) {
         const option = args[i], value = args[i + 1];
-        if (!['--workspace', '--profile', '--mode'].includes(option) || !value || value.startsWith('--') || seen.has(option)) {
+        if (!options.includes(option) || !value || value.startsWith('--') || seen.has(option)) {
           throw new Error(`不支持的参数：${args.join(' ')}\n${help}`);
         }
         seen.add(option);
         if (option === '--workspace') workspace = value;
         else if (option === '--profile') profile = value;
+        else if (option === '--dsh') dsh = value;
         else mode = value;
       }
-      install(workspace, profile, mode);
+      install(workspace, profile, mode, dsh);
     }
   } catch (error) {
     console.error(`StudyMate：${error.message}`);
