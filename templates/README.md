@@ -29,15 +29,15 @@ python3 scripts/preview_templates.py --open   # 生成并直接打开
 - **区块级占位符必须独立成行**（生成器按整行替换）；**字段级可嵌在标签内**（如 `<title><!-- @LEARN:TITLE --> · 课程主页</title>`）
 - 生成器**原样保留模板其余内容**（样式、脚本、文案），区块占位符缺失时报错退出
 - 模板里**不放真实课程数据**：规范注释里的示例一律用字段名（`节点标题`、`NNNN`、`NN%`），避免被误当成数据
-- 占位符清单与每个占位符必须生成的结构：**两个主页模板**见 `docs/工程约束.md` 的「模板与生成器的占位符契约」，
+- 占位符清单与每个占位符必须生成的结构：**两个主页模板**见 `docs/规范/工程约束.md` 的「模板与生成器的占位符契约」，
   以及模板里占位符上方那段注释（那是权威规范，改模板要同步改）；**课件壳 `lesson.html`** 的 8 个
-  占位符见 `docs/课件内容格式.md` §5 与模板自己的注释。
+  占位符见 `docs/规范/课件内容格式.md` §5 与模板自己的注释。
 
 | 模板 | 占位符 | 权威在哪 |
 |------|--------|----------|
-| `home-index.html` | `SUBJECT_CARDS` | `docs/工程约束.md` 的「模板与生成器的占位符契约」+ 模板注释 |
+| `home-index.html` | `SUBJECT_CARDS` | `docs/规范/工程约束.md` 的「模板与生成器的占位符契约」+ 模板注释 |
 | `subject-index.html` | `TITLE` · `STATUS` · `MISSION` · `PROJECT` · `ROADMAP` · `ATTACHMENTS` | 同上 |
-| `lesson.html` | `TITLE`（两处）· `SUBJECT`（两处）· `NUMBER` · `EYEBROW` · `GOAL` · `BODY` · `NAV` · `FOOTER` | `docs/课件内容格式.md` §5 + 模板自己的注释 |
+| `lesson.html` | `TITLE`（两处）· `SUBJECT`（两处）· `NUMBER` · `EYEBROW` · `GOAL` · `BODY` · `NAV` · `FOOTER` | `docs/规范/课件内容格式.md` §5 + 模板自己的注释 |
 
 ## 其他文件
 
@@ -46,7 +46,7 @@ python3 scripts/preview_templates.py --open   # 生成并直接打开
   + 题库 `<序号>-<节点id>.quiz.json` + `<科目>/curriculum.yaml`，渲染成 `<序号>-<节点id>.html`。
   顶栏（含亮/暗主题开关）、共享层与科目组件的引用、页头、上/下节课指针、页脚、三个 `<script>` 与
   `LearnTheme.wire(...)` 全是**渲染器产出**，模板只提供占位符与给维护者看的注释（注释留在
-  `<!DOCTYPE` 之前，不进产物）。正文语法与组件写法以 **`docs/课件内容格式.md`** 为准（唯一规格）；
+  `<!DOCTYPE` 之前，不进产物）。正文语法与组件写法以 **`docs/规范/课件内容格式.md`** 为准（唯一规格）；
   交出前跑一次 `python3 scripts/check_lesson.py <课件路径> --subject <科目目录> --node <节点id>`。
   学生常被总控用 `xdg-open` 直接打开课件，所以**主题开关必须长在课件自己身上**——它由渲染器按模板
   产出，要改就改模板或渲染器，别去手改 `<序号>-<节点id>.html`。

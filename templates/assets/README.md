@@ -42,7 +42,7 @@
         │   ├── quiz.js
         │   └── lesson-toc.js
         └── lessons/                             # 每课三件：内容 + 题库由模型写，页面由渲染器产出
-            ├── <NNNN>-<节点id>.md               # 内容文件（讲解角色写；格式见 docs/课件内容格式.md）
+            ├── <NNNN>-<节点id>.md               # 内容文件（讲解角色写；格式见 docs/规范/课件内容格式.md）
             ├── <NNNN>-<节点id>.quiz.json        # 题库（出题角色写；有 ::: quiz 题目位置时才要）
             └── <NNNN>-<节点id>.html             # 课件页面（render_lesson.py 产出，别手改）
 ```
@@ -63,7 +63,7 @@
 > 留在科目内，是因为它们是**课件层的三个组件**，按「总控建科目」的口径随科目落地，渲染器产出的课件
 > 按 `../assets/…` 引用它们（题目内容与字段契约归题目角色，不在这里改）。**讲解角色不往这里追加组件**：
 > 页面里的组件 HTML 全部由渲染器产出，要加新组件得给渲染器加 `:::` 指令——流程见
-> `docs/课件内容格式.md` 的「已知边界」。
+> `docs/规范/课件内容格式.md` 的「已知边界」。
 
 ## 代码块高亮约定
 
@@ -72,7 +72,7 @@
 
 - 不写 `data-lang` 时按内容猜：认得出 `cpp` / `sh` / `term` / `html` / `js` / `json` 这几类，猜不出来就**保持原样**（程序输出、题面文字不该被染色）；**无标签的 python 块通常会被猜成 `js`**（首行 `import` 命中 js 分支，于是按 js 上色），要正确上色必须显式写 `data-lang="python"`
 - 要指定就写 `data-lang="cpp|sh|bash|shell|term|html|js|javascript|ts|typescript|json|python|py"`（`bash` / `shell` 同 `sh`，`py` 同 `python`，`javascript` / `ts` / `typescript` 同 `js`）；明确不上色写 `data-lang="text"`（`plain` / `markdown` / `md` / `http` / `yaml` / `yml` / `toml` / `sql` / `ini` / `diff` / `mermaid` / `powershell` / `java` 同）
-- 这份清单必须与 `scripts/render_lesson.py` 的 `COLORED_LANGS` / `PLAIN_LANGS` 一致；代码两侧（渲染器白名单 ↔ `var LANGS` 键）由 `scripts/tests/test_templates.py` 钉住，**本文件与 `docs/课件内容格式.md` 不参与那条断言**，改这里要手工对齐
+- 这份清单必须与 `scripts/render_lesson.py` 的 `COLORED_LANGS` / `PLAIN_LANGS` 一致；代码两侧（渲染器白名单 ↔ `var LANGS` 键）由 `scripts/tests/test_templates.py` 钉住，**本文件与 `docs/规范/课件内容格式.md` 不参与那条断言**，改这里要手工对齐
 - 一个块里只要手写过 `.syn-*`，整块跳过——手工优先，自动不覆盖
 - 猜错的常见场合：整块贴的都是「命令 + 输出」混排时按首行判定，可用 `data-lang` 纠正
 
@@ -120,7 +120,7 @@ cp package/dist/fonts/*.woff2 templates/assets/katex/fonts/
 1. `templates/assets/README.md`（本文件的表格与目录树）
 2. `scripts/preview_templates.py` 里的 `shared_files` / `shared_dirs`
 3. `scripts/gen_home.py` 的 `ensure_shared_assets`（真的往工作区拷的那一处）
-4. `docs/工程约束.md` 的「前端技术选型」与「目录与规则归属」（共享层那份清单）
+4. `docs/规范/工程约束.md` 的「前端技术选型」与「目录与规则归属」（共享层那份清单）
 
 ## 谁在哪里落地
 

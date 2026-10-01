@@ -13,7 +13,7 @@
 
 <p align="center"><sub> StudyMate 是面向数学与计算机科目学习的助手，原则是「learn with doing」</sub></p>
 
-<p align="center"><a href="#快速开始">快速开始</a> · <a href="#它是什么">它是什么</a> · <a href="#核心功能">核心功能</a> · <a href="#常见问题">常见问题</a> · <a href="docs/使用说明.md">使用说明</a> · <a href="docs/Antigravity.md">Antigravity 说明</a></p>
+<p align="center"><a href="#快速开始">快速开始</a> · <a href="#它是什么">它是什么</a> · <a href="#核心功能">核心功能</a> · <a href="#常见问题">常见问题</a> · <a href="docs/使用/使用说明.md">使用说明</a> · <a href="docs/使用/Antigravity.md">Antigravity 说明</a></p>
 
 <p align="center"><img src="docs/images/taitou.png" width="860" alt="StudyMate：看板娘 + 手写体品牌字 + 覆盖科目（线代／微积分／概率论／C++／Python／机器学习／深度学习）+「任何科目，一站式搞定 / Learn With Doing」"></p>
 
@@ -46,11 +46,11 @@ npx -y @yunmiao/studymate@latest install
 - **学习工作区默认在 `~/StudyMate`，所有课件与记忆均存放在工作区**；已有配置会沿用。
 - 第一次生成课程后，课程主页在工作区目录 `<workspace>/index.html`，是未来所有课件的入口
 
-指定工作区、依赖安装、桌面端非默认安装位置和换机器续学见 [安装说明](docs/安装.md)。
+指定工作区、依赖安装、桌面端非默认安装位置和换机器续学见 [安装说明](docs/使用/安装.md)。
 
 ### Codex 和 ChatGPT Work
 
-从 [最新 Release](https://github.com/Miaotofu01/Study-Mate/releases/latest) 下载 **studymate-openai.zip**，通过 Codex/ChatGPT 提供的插件导入入口导入（详见 [导入说明](docs/Codex与ChatGPT.md)）。
+从 [最新 Release](https://github.com/Miaotofu01/Study-Mate/releases/latest) 下载 **studymate-openai.zip**，通过 Codex/ChatGPT 提供的插件导入入口导入（详见 [导入说明](docs/使用/Codex与ChatGPT.md)）。
 
 **更新时下载最新版 ZIP，找到已有的插件链接，在浏览器中打开，选择上传新版本**
 
@@ -62,7 +62,7 @@ npx -y @yunmiao/studymate@latest install
 node bin/studymate.mjs build-antigravity --install
 ```
 
-或者通过 `npm run build:antigravity` 构建 ZIP 包手动导入（详见 [Antigravity 说明](docs/Antigravity.md)）。
+或者通过 `npm run build:antigravity` 构建 ZIP 包手动导入（详见 [Antigravity 说明](docs/使用/Antigravity.md)）。
 
 ## 它是什么
 
@@ -94,7 +94,7 @@ StudyMate 是一套**数学/计算机学习工作流、SKILL 与 HTML 课件引�
 
 ## 用法示例
 
-- **「我不知道学什么，帮我选方向」** → 一次聊一个问题，可跳过或先看建议；选定方向后补齐开课信息，确认后接回建课与首课流程（见 [可选方向探索](docs/使用说明.md#可选先探索学习方向)）。
+- **「我不知道学什么，帮我选方向」** → 一次聊一个问题，可跳过或先看建议；选定方向后补齐开课信息，确认后接回建课与首课流程（见 [可选方向探索](docs/使用/使用说明.md#可选先探索学习方向)）。
 - **「我想学 C++ 打竞赛」** → 先盘问目的/程度/项目/实验方式，再产出大纲路线图与科目主页，开第一课。
 - **带着指定教材自学** → 盘问结束后主动提供本地资料路径（讲义、笔记或教材目录），系统把教材转成 Markdown 放进 `reference/`（学生能翻），把它收集到的在线来源转成 Markdown 放进 `sources/`（写课对齐用）；大纲与课件都对着这批原文写。
 - **贴一段看不懂的课文 + 「这里没懂」** → 主教练当场答一小段，记一条档案，送你回原位接着读。
@@ -154,13 +154,18 @@ StudyMate/                     ← 本仓库：系统源码（引擎），学习
 ├── dist/studymate/            # build:plugin 生成的 OpenAI 插件，含适配后的 12 个技能（不入库）
 ├── dist/antigravity/          # build-antigravity 生成的 Antigravity 插件目录与 ZIP（不入库）
 ├── examples/                  # 示例学习工作区：线性代数 + 计算机网络，页面已生成，clone 即可点开
-├── docs/                      # 使用说明、课件内容格式、设计方案、工程约束、文件归属、方向探索指南与验收、docs/images/ 截图
+├── docs/                      # 文档，按用途分四类（见下）
+│   ├── 使用/                  #   安装、使用说明、Antigravity、Codex 与 ChatGPT、发布流程
+│   ├── 设计/                  #   设计方案、方向探索指南与验收
+│   ├── 规范/                  #   工程约束、课件内容格式、文件归属（唯一约束来源）
+│   └── agents/                #   agent 约定层：issue tracker、triage 标签、领域文档布局
+├── AGENTS.md                  # agent 入口：只放指针，指向上面各份的唯一出处
 └── workspace/                 # 可选的本地学习工作区（已被 .gitignore 忽略）
 ```
 
-DSH 安装到 `~/.dsh/studymate/engine/`，预设与工作区配置也由安装器管理。学习数据默认位于独立的 `~/StudyMate`，无需保留源码仓库；详见 [安装说明](docs/安装.md)。
+DSH 安装到 `~/.dsh/studymate/engine/`，预设与工作区配置也由安装器管理。学习数据默认位于独立的 `~/StudyMate`，无需保留源码仓库；详见 [安装说明](docs/使用/安装.md)。
 
-学习工作区里面长什么样（科目文件夹、课件、lab、档案、课型与题型、模板与生成器的契约），见 [使用说明 §六](docs/使用说明.md#六学习数据存在哪)。
+学习工作区里面长什么样（科目文件夹、课件、lab、档案、课型与题型、模板与生成器的契约），见 [使用说明 §六](docs/使用/使用说明.md#六学习数据存在哪)。
 
 ## 常见问题
 
@@ -173,19 +178,19 @@ DSH 安装到 `~/.dsh/studymate/engine/`，预设与工作区配置也由安装�
 <details>
 <summary><b>已装 Python，但提示缺少 PyYAML</b></summary>
 
-Python 不自带 PyYAML。请在系统终端复制安装器给出的依赖安装命令，使用它检测到的同一个解释器，完成后重试原 `npx` 命令并保留参数。看到 `>>>` 或提示缺少 `pip` 时，按 [依赖安装说明](docs/安装.md#dsh) 处理。
+Python 不自带 PyYAML。请在系统终端复制安装器给出的依赖安装命令，使用它检测到的同一个解释器，完成后重试原 `npx` 命令并保留参数。看到 `>>>` 或提示缺少 `pip` 时，按 [依赖安装说明](docs/使用/安装.md#dsh) 处理。
 
 完整课件校验还需要 `jsonschema`；缺少它时，大纲检查会跳过 schema 校验。
 </details>
 
-更多问题（手改 YAML 的坑、大纲改节点后指针为什么会错、能不能离线）见 [使用说明 §八 常见问题](docs/使用说明.md#八常见问题)。
+更多问题（手改 YAML 的坑、大纲改节点后指针为什么会错、能不能离线）见 [使用说明 §八 常见问题](docs/使用/使用说明.md#八常见问题)。
 
 ## 贡献 / License
 
 - **项目交流群**(QQ)：161914370
 - **参与开发**：[CONTRIBUTING.md](CONTRIBUTING.md)（改哪块先读哪份、本地怎么验、提交信息规范）
 - **变更日志**：[CHANGELOG.md](CHANGELOG.md)
-- **文档**：[使用说明](docs/使用说明.md)（日常怎么用、课型与题型、检查与档案规则）· [Codex 与 ChatGPT](docs/Codex与ChatGPT.md)（OpenAI 插件构建、安装与工作区）· [Antigravity 说明](docs/Antigravity.md)（Antigravity 插件构建、多智能体协同与安装）· [课件内容格式](docs/课件内容格式.md)（内容文件与题目位置的语法）· [文件归属](docs/文件归属.md)（代称 ↔ 路径 ↔ 维护者）· [设计方案](docs/设计方案.md)（产品视角）· [工程约束](docs/工程约束.md)（目录约定、占位符契约、脚本一览、技术选型） · [VitePress 课程工作区](docs/VitePress工作区.md)（可选阅读端提案，对接 #22）· [模板说明](templates/README.md) · [前端资源契约](templates/assets/README.md)
+- **文档**：[使用说明](docs/使用/使用说明.md)（日常怎么用、课型与题型、检查与档案规则）· [Codex 与 ChatGPT](docs/使用/Codex与ChatGPT.md)（OpenAI 插件构建、安装与工作区）· [Antigravity 说明](docs/使用/Antigravity.md)（Antigravity 插件构建、多智能体协同与安装）· [课件内容格式](docs/规范/课件内容格式.md)（内容文件与题目位置的语法）· [文件归属](docs/规范/文件归属.md)（代称 ↔ 路径 ↔ 维护者）· [设计方案](docs/设计/设计方案.md)（产品视角）· [工程约束](docs/规范/工程约束.md)（目录约定、占位符契约、脚本一览、技术选型）· [VitePress 课程工作区](docs/设计/VitePress工作区.md)（可选阅读端提案，对接 #22）· [模板说明](templates/README.md) · [前端资源契约](templates/assets/README.md)
 
 ### 提改动前先跑这几条
 

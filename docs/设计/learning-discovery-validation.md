@@ -1,6 +1,6 @@
 # 可选学习方向探索：验收记录
 
-实现基于上游 `14c44f144738ba83850d6bfa98338dc431a12881`；本轮优化接续开发分支的 `a2cb264efbedb1f0c80a8878ced74d74859e8949`。规则归 [learning-discovery](../.dsh/skills/learning-discovery/SKILL.md)，交接归 [learning-system](../.dsh/skills/learning-system/SKILL.md)，操作见 [使用指南](learning-discovery-guide.md)。
+实现基于上游 `14c44f144738ba83850d6bfa98338dc431a12881`；本轮优化接续开发分支的 `a2cb264efbedb1f0c80a8878ced74d74859e8949`。规则归 [learning-discovery](../../.dsh/skills/learning-discovery/SKILL.md)，交接归 [learning-system](../../.dsh/skills/learning-system/SKILL.md)，操作见 [使用指南](learning-discovery-guide.md)。
 
 **工程检查通过，实际模型行为尚未全部通过。** 已完成 36 次首轮对话尝试、8 次定向复测及 1 次报告格式采样；两次真实建课至首课的角色与渲染链路完成。仍发现过度补问、信息推断和报告偏长，不能把此版本称为稳定通过全部验收。
 
@@ -23,7 +23,7 @@
 
 ## 真实对话的执行方式
 
-[合成场景文件](../scripts/tests/fixtures/learning_discovery_cases.json) 固定 12 个场景的用户事实、逐轮回复条件与独立验收标准。实际使用 DSH `0.1.5-rc.3` 的学习预设、`deepseek-v4-flash`／`low`，由官方 API 执行；GPT 审查记录。合成用户由评审逐轮作答，不是真人试用，也不是同一模型自己给自己的回答打分。
+[合成场景文件](../../scripts/tests/fixtures/learning_discovery_cases.json) 固定 12 个场景的用户事实、逐轮回复条件与独立验收标准。实际使用 DSH `0.1.5-rc.3` 的学习预设、`deepseek-v4-flash`／`low`，由官方 API 执行；GPT 审查记录。合成用户由评审逐轮作答，不是真人试用，也不是同一模型自己给自己的回答打分。
 
 1. 每次安装到独立 DSH 配置与学习目录，隔离 HOME、临时目录及预设中的绝对路径。只准备合成记忆／科目，安装完成后才记录文件基线；不读取真实学生学习数据。
 2. 从 `initial_user` 开始，按当前问题选择 `adaptive_answers`，条件满足时使用 `turns`；未提供的事实回答“不确定”。不把 `checks`／`review_only` 或未问到的用户事实交给被测模型，不加纠错暗示以取得通过。

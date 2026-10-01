@@ -90,7 +90,7 @@ node scripts/tests/browser/shot.mjs <file-url> <out-prefix> <css-selector>
 
 ## 写新测试
 
-方向探索的验收场景与待验证项见 [学习方向探索验收](../../docs/learning-discovery-validation.md)。这里的规则断言与人工走读均不能代替实际模型对话验证；尤其八问上限、退出后停问、确认前无写入，需要在学习模式中观察对话与工具调用。技能调用面另用 `python3 scripts/check_skill.py .dsh/skills/learning-discovery --expect-model-invocable` 校验。
+方向探索的验收场景与待验证项见 [学习方向探索验收](../../docs/设计/learning-discovery-validation.md)。这里的规则断言与人工走读均不能代替实际模型对话验证；尤其八问上限、退出后停问、确认前无写入，需要在学习模式中观察对话与工具调用。技能调用面另用 `python3 scripts/check_skill.py .dsh/skills/learning-discovery --expect-model-invocable` 校验。
 
 [learning_discovery_cases.json](fixtures/learning_discovery_cases.json) 提供 12 个合成多轮场景、按问题披露的用户回答与独立评审判据。它是可重复使用的测试数据，**不是通过记录或自动评分器**。真实模型验证按每场景 3 次执行；使用隔离学习目录，保存对话、工具调用和文件变化。不要把 `checks`／`review_only` 作为用户输入发给被测模型，也不要将这些联网、消耗模型额度的运行加入默认快测或发布检查。目标 DSH 版本不同可用界面逐轮执行，无须依赖其内部 API。
 

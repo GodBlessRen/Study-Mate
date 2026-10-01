@@ -6,7 +6,7 @@
 
 读：
     <科目>/curriculum.yaml                        节点位次（决定文件名序号）/title/前后邻居
-    <科目>/lessons/<序号>-<节点id>.md              内容文件（格式见 docs/课件内容格式.md）
+    <科目>/lessons/<序号>-<节点id>.md              内容文件（格式见 docs/规范/课件内容格式.md）
     <科目>/lessons/<序号>-<节点id>.quiz.json       题库（有 `::: quiz` 时才要；按锚点组织）
     <科目>/assets/img/pool.md                      图片池索引（题注的来源/许可从这里取）
     <科目>/subject.yaml                            科目名（顶栏与 <title>；缺文件退回目录名）
@@ -27,7 +27,7 @@
 `LearnTheme.wire(...)`。交付页面从 `<!DOCTYPE html>` 开始：模板里给维护者看的说明注释留在
 `<!DOCTYPE` 之前，不进产物。
 
-内容格式的完整语法表、反例与「什么不该写」见 docs/课件内容格式.md（本文件的错误信息与之对应）。
+内容格式的完整语法表、反例与「什么不该写」见 docs/规范/课件内容格式.md（本文件的错误信息与之对应）。
 依赖：标准库 + pyyaml（与 check_lesson.py / gen_home.py 同口径，不引第三方新依赖）。
 """
 import json
@@ -102,12 +102,12 @@ CJK_RE = re.compile(r'[\u3000-\u303f\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff0
 # 名单之外的写法一律当普通文字（`<T>` 泛型、`n<m` 运算符）。
 # 约定：**名单一律小写**；查表前把捕获到的名字 `.lower()`（HTML 标签名本来就不区分大小写）。
 # 扩展词汇（例如以后加新组件标签）时，**必须同步往这里加名字**，否则那个标签会被当普通文字
-# 放行——docs/课件内容格式.md §2 列的是同一份名单（测试会断言两边逐字一致）。
+# 放行——docs/规范/课件内容格式.md §2 列的是同一份名单（测试会断言两边逐字一致）。
 #
 # **但加名字有硬边界**：两个形状正则（HTML_TAG_RE / TAG_SHAPE_RE）捕获的名字都是
 # `[a-zA-Z][a-zA-Z0-9]*`——**不含连字符**。所以 `<syo-editor>` 这类连字符自定义元素，往这份名单里
 # 加多少名字都匹配不上（行首检查的 HTML_TAG_RE 只截到连字符前的 `syo`，行内检查的 TAG_SHAPE_RE
-# 干脆不匹配），照旧被当字面量放行（静默出厂）。这类组件只能走 docs/课件内容格式.md
+# 干脆不匹配），照旧被当字面量放行（静默出厂）。这类组件只能走 docs/规范/课件内容格式.md
 # §7「已知边界」给的那条路：**做成 `:::` 指令**（渲染器 + 测试 + 文档），不在这份名单里加名字。
 # 同理，这份名单收的是**元素名**（标准 HTML 元素 + SVG 元素名）：MathML 的内层元素名
 # （`<mrow>`、`<mi>`、`<msqrt>` 这类）不在里面，写进正文会被当普通文字放行——要排数学式
@@ -262,7 +262,7 @@ def check_title_match(path, node_id, front, front_lines, outline, problems):
     """这节课叫什么只有一个答案：front matter 的 `title` = `curriculum.yaml` 该节点的 `title`（逐字）。
 
     页面 `<title>`／`<h1>`／eyebrow 用 front matter 的，主页卡片与路线图用大纲的——不一致就是同一节课
-    挂了两个名字。行号指向 front matter 的 title 行（规则见 docs/课件内容格式.md 第 1 节）。
+    挂了两个名字。行号指向 front matter 的 title 行（规则见 docs/规范/课件内容格式.md 第 1 节）。
     """
     title = front.get('title')
     if not title:                                  # 缺 title 由 parse_front_matter 报过，这里不再重复
@@ -272,7 +272,7 @@ def check_title_match(path, node_id, front, front_lines, outline, problems):
         problems.add(path, front_lines.get('title', 1),
                      f'front matter 的 title「{title}」与 curriculum.yaml 里节点 {node_id} 的 '
                      f'title「{outline_title}」不一致——两处必须逐字一致（改这里或改大纲，'
-                     '见 docs/课件内容格式.md 第 1 节）')
+                     '见 docs/规范/课件内容格式.md 第 1 节）')
 
 
 def html_block_tag(stripped):
