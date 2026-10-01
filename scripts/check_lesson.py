@@ -921,7 +921,7 @@ def check_math_style(text):
     r"""质量线（只提示）：`aligned` 里有两行以上等式，却没被 `\left\{ … \right.` 包住。
 
     这是方程组最容易被漏掉的一处：KaTeX 不会自己加括号，少了大括号读者会把一列等式当成几个
-    独立结论（规格见 docs/课件内容格式.md 第 3 节的「方程组要带大括号」）。判据保守——
+    独立结论（规格见 docs/规范/课件内容格式.md 第 3 节的「方程组要带大括号」）。判据保守——
     只在「同一段 aligned 里 ≥2 行带 `&=`」且紧邻上文没有 `\left\{` 时提示，推导链
     （`\xrightarrow`）与单条恒等式都不会命中。**只提示，不阻断**：它拦不了交付，只提醒补一下。
     """
@@ -934,7 +934,7 @@ def check_math_style(text):
             continue
         notes.append('这段 aligned 有两行以上等式、却没有大括号——方程组要写成 '
                      r'`$$\left\{\begin{aligned} … \end{aligned}\right.$$`'
-                     '（KaTeX 不会自己加，见 docs/课件内容格式.md 第 3 节）')
+                     '（KaTeX 不会自己加，见 docs/规范/课件内容格式.md 第 3 节）')
     return notes
 
 

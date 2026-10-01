@@ -1,6 +1,6 @@
 # 学习方向探索：从源码试用与使用指南
 
-这个功能帮助你先选学习方向，再接回 StudyMate 原有的建课和上课流程。日常使用不需要本页——按 [README 的快速开始](../README.md#快速开始) 装好以后，在学习对话里说「我不知道学什么，帮我选方向」就会进入探索。
+这个功能帮助你先选学习方向，再接回 StudyMate 原有的建课和上课流程。日常使用不需要本页——按 [README 的快速开始](../../README.md#快速开始) 装好以后，在学习对话里说「我不知道学什么，帮我选方向」就会进入探索。
 
 本页是给**想从源码试用或改这个功能**的人看的：怎么把当前源码装进一个独立的 DSH 配置，不碰你平时用的学习环境。
 
@@ -23,7 +23,7 @@ pnpm --version
 py -3 -c "import sys, yaml; print(sys.version); print(yaml.__version__)"
 ```
 
-如果没有 `py`，用本机的 `python` 替代。缺少 PyYAML 时，用对应解释器安装：`py -3 -m pip install PyYAML`。没有 DSH 时，可运行 `npm install -g @deepseek-ai/dsh@latest` 安装提供 `dsh` 命令的[官方 CLI 包](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/package.json)；缺少 `pnpm` 时运行 `npm install -g pnpm`。安装完成后重新检查命令能否运行。模型和界面配置可查 [DSH 官方指南](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/guide/index.zh.md)，StudyMate 安装背景见 [安装说明](安装.md)。
+如果没有 `py`，用本机的 `python` 替代。缺少 PyYAML 时，用对应解释器安装：`py -3 -m pip install PyYAML`。没有 DSH 时，可运行 `npm install -g @deepseek-ai/dsh@latest` 安装提供 `dsh` 命令的[官方 CLI 包](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/package.json)；缺少 `pnpm` 时运行 `npm install -g pnpm`。安装完成后重新检查命令能否运行。模型和界面配置可查 [DSH 官方指南](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/guide/index.zh.md)，StudyMate 安装背景见 [安装说明](../使用/安装.md)。
 
 **这一步是为了试用当前源码。** 已经按 README 用 `npx` 装好的同学可以跳过：那种安装方式用的是已发布的包，源码改动不会自动生效；若已有原生 StudyMate 插件，它在 DSH 启动时可能重新安装自己的版本，覆盖刚装好的本地技能。因此下面用**独立的 DSH 配置目录和学习工作区**，避免与你平时的学习环境混用。
 
@@ -122,4 +122,4 @@ dsh web
 
 已在 DSH 0.1.5-rc.3／DeepSeek 的隔离环境执行多轮对话，并实际完成建课到首课渲染；观察到的确认前阶段没有学习文件写入。**这仍是待完善的开发版本**：模型偶尔在信息足够后继续补问、把未知写成确定事实、输出过长报告，精确八问边界尚未在完整 DSH 对话中触达。上文描述的是协议要求，不能理解为所有模型都会稳定遵守。若遇到问题，请保留对话片段和相关文件变化；不要把暂定建议当成已验证的能力结论。
 
-具体检查范围见 [验收记录](learning-discovery-validation.md)，日常学习操作见 [使用说明](使用说明.md)。
+具体检查范围见 [验收记录](learning-discovery-validation.md)，日常学习操作见 [使用说明](../使用/使用说明.md)。

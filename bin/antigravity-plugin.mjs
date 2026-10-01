@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { adaptAntigravitySkill, adaptAntigravityAgent, AGENT_ROLES } from './antigravity-skill-compat.mjs';
+import { listDocMarkdown } from './docs-payload.mjs';
 
 const source = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const marker = '.studymate-build.json';
@@ -112,10 +113,11 @@ export function buildAntigravityPlugin({ output = path.resolve('dist/antigravity
     for (const name of fs.readdirSync(path.join(source, 'scripts')).filter(name => name.endsWith('.py') && name !== 'install_preset.py')) {
       copyTree(path.join(source, 'scripts', name), path.join(plugin, 'scripts', name));
     }
-    for (const name of fs.readdirSync(path.join(source, 'docs')).filter(name => name.endsWith('.md'))) {
-      const text = fs.readFileSync(path.join(source, 'docs', name), 'utf8').replaceAll('.dsh/skills', 'skills');
-      fs.mkdirSync(path.join(plugin, 'docs'), { recursive: true });
-      fs.writeFileSync(path.join(plugin, 'docs', name), text);
+    for (const relative of listDocMarkdown(source)) {
+      const text = fs.readFileSync(path.join(source, 'docs', relative), 'utf8').replaceAll('.dsh/skills', 'skills');
+      const target = path.join(plugin, 'docs', relative);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, text);
     }
 
     copyTree(path.join(source, 'docs', 'images', 'logo.png'), path.join(plugin, 'assets', 'logo.png'));

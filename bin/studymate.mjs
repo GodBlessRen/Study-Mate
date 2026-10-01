@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { adaptSkill } from './skill-compat.mjs';
 import { buildOpenAiPlugin } from './openai-plugin.mjs';
 import { buildAntigravityPlugin } from './antigravity-plugin.mjs';
+import { listDocMarkdown } from './docs-payload.mjs';
 
 const source = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const metadata = JSON.parse(fs.readFileSync(path.join(source, 'package.json'), 'utf8'));
@@ -278,13 +279,17 @@ function copyPayload(destination) {
       filter: (file) => !['__pycache__', '.DS_Store'].includes(path.basename(file)),
     });
   }
-  for (const [directory, extension] of [['scripts', '.py'], ['docs', '.md']]) {
-    fs.mkdirSync(path.join(destination, directory), { recursive: true });
-    for (const entry of fs.readdirSync(path.join(source, directory), { withFileTypes: true })) {
-      if (entry.isFile() && entry.name.endsWith(extension)) {
-        fs.copyFileSync(path.join(source, directory, entry.name), path.join(destination, directory, entry.name));
-      }
+  fs.mkdirSync(path.join(destination, 'scripts'), { recursive: true });
+  for (const entry of fs.readdirSync(path.join(source, 'scripts'), { withFileTypes: true })) {
+    if (entry.isFile() && entry.name.endsWith('.py')) {
+      fs.copyFileSync(path.join(source, 'scripts', entry.name), path.join(destination, 'scripts', entry.name));
     }
+  }
+  // docs/ 按用途分子目录，必须按原相对路径铺开——技能里的 <root>/docs/<子目录>/<名>.md 指针依赖它
+  for (const relative of listDocMarkdown(source)) {
+    const target = path.join(destination, 'docs', relative);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.copyFileSync(path.join(source, 'docs', relative), target);
   }
   for (const file of ['package.json', 'LICENSE']) {
     fs.copyFileSync(path.join(source, file), path.join(destination, file));

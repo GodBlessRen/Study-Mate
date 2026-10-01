@@ -15,11 +15,11 @@
 | 你要改 | 先读 | 改完还要 |
 |---|---|---|
 | `.dsh/skills/**` 提示词与角色规格 | 该技能自己的 `SKILL.md`；课件规则归 `lesson-design`，题目归 `layered-practice` | `npm run test:static`（逐条核对提示词规则，删掉规则会红） |
-| `scripts/*.py` 生成器、渲染器、校验器 | [工程约束](docs/工程约束.md) §三 占位符契约、§四 脚本一览 | `npm test`；动了共享层或模板，按下面「示例是产物」重跑 examples |
-| `templates/**` 页面骨架与前端资源 | [工程约束](docs/工程约束.md) §三、§五；[模板说明](templates/README.md) | 同上；新增或改名共享文件要同时改三处清单（§五末条） |
-| `schemas/*.json` | 该 schema 本身；[文件归属](docs/文件归属.md) | `npm test` |
-| `bin/*.mjs` 安装器与插件构建 | [安装说明](docs/安装.md)；[Codex 与 ChatGPT](docs/Codex与ChatGPT.md) | `npm test` |
-| `openai/studymate/**` 插件源 | [Codex 与 ChatGPT](docs/Codex与ChatGPT.md) | `npm run build:plugin`，导入 `dist/studymate-openai.zip` 验证 |
+| `scripts/*.py` 生成器、渲染器、校验器 | [工程约束](docs/规范/工程约束.md) §三 占位符契约、§四 脚本一览 | `npm test`；动了共享层或模板，按下面「示例是产物」重跑 examples |
+| `templates/**` 页面骨架与前端资源 | [工程约束](docs/规范/工程约束.md) §三、§五；[模板说明](templates/README.md) | 同上；新增或改名共享文件要同时改三处清单（§五末条） |
+| `schemas/*.json` | 该 schema 本身；[文件归属](docs/规范/文件归属.md) | `npm test` |
+| `bin/*.mjs` 安装器与插件构建 | [安装说明](docs/使用/安装.md)；[Codex 与 ChatGPT](docs/使用/Codex与ChatGPT.md) | `npm test` |
+| `openai/studymate/**` 插件源 | [Codex 与 ChatGPT](docs/使用/Codex与ChatGPT.md) | `npm run build:plugin`，导入 `dist/studymate-openai.zip` 验证 |
 | `docs/**`、`README.md` | 该文件已有的口径；新规则遵循「一处定义，别处只给指针」 | — |
 
 提示词、模板、`schemas/` 和 `scripts/` 里的 Python 会**同时**流进 DSH 预设与 Codex 插件（插件由 `npm run build:plugin` 从这些源转换而来），改完别只验 DSH 一侧。
@@ -92,7 +92,7 @@ python3 scripts/build_examples.py        # 或 npm run build:examples
 
 ## 发布
 
-维护者手动触发，见[发布流程](docs/releasing.md)。
+维护者手动触发，见[发布流程](docs/使用/releasing.md)。
 
 ## License
 

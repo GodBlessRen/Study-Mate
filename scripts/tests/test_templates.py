@@ -2,7 +2,7 @@
 """模板与规格一致：`templates/` 的分节名与键，必须和提示词/schema 写的一致。
 
 为什么单独有这道：规格是散文（写在 SKILL 与 `docs/` 里），模板是另一份文件，两者之间没有测试
-连着。真出过事——`templates/GLOSSARY.md` 一直写 `## Terms`，而 `docs/文件归属.md`、
+连着。真出过事——`templates/GLOSSARY.md` 一直写 `## Terms`，而 `docs/规范/文件归属.md`、
 `learning-system`、`image-scout` 三处都按 `## 待掌握`／`## 已掌握` 两节读词：照模板建出来的术语表，
 「采图」查不到主题词、主页也没有那两节可读。这类漂移不会有任何报错，只能靠交叉阅读发现。
 
@@ -43,16 +43,16 @@ def has_all(text, needles):
 
 def main():
     # ── 一、规格侧：这些分节名是规格定的（改规格要先改这里，再同步模板）────────
-    ok, missing = has_all(read('docs/文件归属.md'), ['## 待掌握', '## 已掌握'])
-    check('规格仍要求术语表两节（docs/文件归属.md）', ok, f'缺 {missing}')
+    ok, missing = has_all(read('docs/规范/文件归属.md'), ['## 待掌握', '## 已掌握'])
+    check('规格仍要求术语表两节（docs/规范/文件归属.md）', ok, f'缺 {missing}')
 
     ok, missing = has_all(read('.dsh/skills/learning-system/SKILL.md'),
                           ['## Why', '## Success looks like', '## Constraints'])
     check('规格仍要求使命三节（learning-system 建课顺序）', ok, f'缺 {missing}')
 
-    ok, missing = has_all(read('docs/使用说明.md'),
+    ok, missing = has_all(read('docs/使用/使用说明.md'),
                           ['我是谁 / 教学偏好 / 学习习惯 / 跨科目观察'])
-    check('规格仍列出共享记忆四节（docs/使用说明.md §六）', ok, f'缺 {missing}')
+    check('规格仍列出共享记忆四节（docs/使用/使用说明.md §六）', ok, f'缺 {missing}')
 
     # ── 二、模板侧：照着上面的规格逐条对 ──────────────────────────────────
     ok, missing = has_all(read('templates/GLOSSARY.md'), ['## 待掌握', '## 已掌握'])

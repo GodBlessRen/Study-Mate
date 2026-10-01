@@ -101,7 +101,7 @@ test('exported Antigravity ZIP contains complete agents, skills, and templates',
     'scripts/render_lesson.py',
     'scripts/gen_home.py',
     'scripts/check_lesson.py',
-    'docs/文件归属.md',
+    'docs/规范/文件归属.md',
     'README.md',
     'LICENSE',
   ]) {

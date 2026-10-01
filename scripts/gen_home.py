@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """生成根主页与全部科目主页：读模板 → 替换占位符 → 输出到学习工作区。
 
-占位符约定见 docs/工程约束.md 的「模板与生成器的占位符契约」（区块级 SUBJECT_CARDS/ROADMAP/PROJECT/ATTACHMENTS
+占位符约定见 docs/规范/工程约束.md 的「模板与生成器的占位符契约」（区块级 SUBJECT_CARDS/ROADMAP/PROJECT/ATTACHMENTS
 + 字段级 TITLE/STATUS/MISSION）；每个占位符要生成的结构见模板里的注释——那份注释是**权威规范**，
 改模板与改这里必须同步。
 

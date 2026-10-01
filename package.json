@@ -27,7 +27,7 @@
     "scripts/*.py",
     "schemas/*.json",
     "templates/**",
-    "docs/*.md",
+    "docs/**/*.md",
     "docs/images/**",
     "README.md",
     "CHANGELOG.md",

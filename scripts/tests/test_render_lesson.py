@@ -667,7 +667,7 @@ def _(a):
 
 
 # ══════════════════════════════════════════════════════════════════
-# ⑩ 提示卡：tip / warn / note（note 是追加的词汇，见 docs/课件内容格式.md）
+# ⑩ 提示卡：tip / warn / note（note 是追加的词汇，见 docs/规范/课件内容格式.md）
 # ══════════════════════════════════════════════════════════════════
 
 @case('提示卡：tip / warn / note 的类名与加粗标题')
@@ -1241,7 +1241,7 @@ def _(a):
 # ══════════════════════════════════════════════════════════════════
 
 # 完整标准 HTML 元素表（HTML living standard 的每一个元素，含旧式、表现型与已废弃的那些）
-# + SVG 元素名，全小写。这是**写死的第二份**：代码、本节、docs/课件内容格式.md §2 三份必须
+# + SVG 元素名，全小写。这是**写死的第二份**：代码、本节、docs/规范/课件内容格式.md §2 三份必须
 # 逐字一致——名单曾经收窄成 45 个名字，于是 <iframe>/<video>/<form>/<main> 与 11 个 SVG 名字
 # 静默当字面量出厂（exit 0）。
 RULED_TAG_NAMES = frozenset('''
@@ -1270,12 +1270,12 @@ REGRESSED_TAG_NAMES = (
 
 
 def doc_tag_names():
-    """从 docs/课件内容格式.md §2 的白名单那句里取名字（`h1…h6` 展开成 h1..h6）。"""
+    """从 docs/规范/课件内容格式.md §2 的白名单那句里取名字（`h1…h6` 展开成 h1..h6）。"""
     doc = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                       'docs', '课件内容格式.md')
+                       'docs', '规范', '课件内容格式.md')
     text = open(doc, encoding='utf-8').read()
     sentence = re.search(r'真标签白名单\*\*里——(.+?)这些引擎', text, re.S)
-    assert sentence, 'docs/课件内容格式.md 里找不到真标签白名单那句（文档被改写了）'
+    assert sentence, 'docs/规范/课件内容格式.md 里找不到真标签白名单那句（文档被改写了）'
     listed = re.search(r'`([^`]+)`', sentence.group(1), re.S).group(1)
     listed = re.sub(r'h1…h6', ' '.join(f'h{i}' for i in range(1, 7)), listed)
     return {token for token in re.findall(r'[a-z][a-z0-9]*', listed)}
@@ -1287,7 +1287,7 @@ def _(a):
          render_lesson.HTML_TAG_NAMES == RULED_TAG_NAMES,
          f'代码多 {sorted(render_lesson.HTML_TAG_NAMES - RULED_TAG_NAMES)}，'
          f'代码少 {sorted(RULED_TAG_NAMES - render_lesson.HTML_TAG_NAMES)}')
-    a.ok('名单 = docs/课件内容格式.md 里列的那一份（多一个少一个都不行）',
+    a.ok('名单 = docs/规范/课件内容格式.md 里列的那一份（多一个少一个都不行）',
          render_lesson.HTML_TAG_NAMES == doc_tag_names(),
          f'代码多 {sorted(render_lesson.HTML_TAG_NAMES - doc_tag_names())}，'
          f'代码少 {sorted(doc_tag_names() - render_lesson.HTML_TAG_NAMES)}')
@@ -1564,7 +1564,7 @@ def _(a):
          and render_lesson.TAG_SHAPE_RE.search('<syo-editor>') is None)
 
     doc_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-        os.path.abspath(__file__)))), 'docs', '课件内容格式.md')
+        os.path.abspath(__file__)))), 'docs', '规范', '课件内容格式.md')
     doc = open(doc_path, encoding='utf-8').read()
     a.has(doc, '不含连字符', 'syo-editor', 'MathML',
           label='格式文档写明连字符与 MathML 两条边界')
