@@ -106,7 +106,7 @@ StudyMate 是一套**数学/计算机学习工作流、SKILL 与 HTML 课件引�
 ## 配置与维护
 
 <details>
-<summary><b>脚本：主页生成 + 课件渲染 + 四道校验</b></summary>
+<summary><b>脚本：主页生成 + 课件渲染 + 四道领域校验 + Agent 交接校验</b></summary>
 
 ```bash
 python3 scripts/gen_home.py                    # 生成根主页 + 全部科目主页（默认读配置里的 workspace）
@@ -148,9 +148,9 @@ StudyMate/                     ← 本仓库：系统源码（引擎），学习
 │   ├── local-qa/              #   规范：局部提问怎么答
 │   └── record-keeping/        #   规范：学习状态读写规则
 ├── preset/learning/           # 「学习模式」预设源（npx 安装到 ~/.dsh/）
-├── schemas/                   # 5 份数据结构：大纲 / 进度 / 评估 / 会话摘要 / 科目
+├── schemas/                   # 6 份数据结构：大纲 / 进度 / 评估 / 会话摘要 / 科目 / Agent 交接
 ├── templates/                 # 页面骨架（主页、科目页、课件壳）与前端资源 assets/
-├── scripts/                   # 主页生成 + 课件渲染器 + 四道校验检查（用法见上）+ tests/ 回归测试
+├── scripts/                   # 主页生成 + 课件渲染器 + 四道领域校验 + Agent 交接校验 + tests/ 回归测试
 ├── dist/studymate/            # build:plugin 生成的 OpenAI 插件，含适配后的 12 个技能（不入库）
 ├── dist/antigravity/          # build-antigravity 生成的 Antigravity 插件目录与 ZIP（不入库）
 ├── examples/                  # 示例学习工作区：线性代数 + 计算机网络，页面已生成，clone 即可点开

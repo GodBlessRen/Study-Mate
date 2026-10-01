@@ -34,7 +34,7 @@ test('exported ZIP contains complete portable skills and renders without DSH or 
   assert.equal(manifest.version, JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version);
   assert.equal(fs.readdirSync(path.join(plugin, 'skills')).length, 12);
   for (const asset of ['skills/learning-system/SKILL.md', 'skills/learning-system/references/codex-interaction.md',
-    'scripts/interaction_state.py', 'assets/logo.png', 'templates/lesson.html', 'templates/assets/katex/fonts/LICENSE', 'schemas/curriculum.schema.json', 'scripts/render_lesson.py', 'docs/规范/文件归属.md', 'requirements.txt']) {
+    'scripts/interaction_state.py', 'assets/logo.png', 'templates/lesson.html', 'templates/assets/katex/fonts/LICENSE', 'schemas/curriculum.schema.json', 'schemas/agent-handoff.schema.json', 'scripts/check_handoff.py', 'scripts/render_lesson.py', 'docs/规范/文件归属.md', 'requirements.txt']) {
     assert.ok(fs.existsSync(path.join(plugin, asset)), asset);
   }
   for (const unwanted of ['node_modules', '.git', 'workspace', '.dsh', 'preset', 'scripts/tests', 'scripts/install_preset.py']) {
