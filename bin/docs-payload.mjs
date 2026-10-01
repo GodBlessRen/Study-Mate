@@ -6,7 +6,7 @@ import path from 'node:path';
 //
 // 不随包分发的两项：
 //   images/      —— 只有 logo.png 有用，各处单独复制到 assets/
-//   superpowers/ —— 本地工作草稿，与 .superpowers/ 同性质
+//   superpowers/ —— 曾经的本地工作草稿位，已按维护者决定从仓库删除；留这条守卫防止它再长回来
 const SKIP_DIRECTORIES = new Set(['images', 'superpowers', '__pycache__']);
 
 /** 列出 docs/ 下所有要随包分发的 markdown，返回相对 docs/ 的 posix 路径。 */

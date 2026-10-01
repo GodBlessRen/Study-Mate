@@ -30,12 +30,14 @@ issue 与 spec 都活在 GitHub Issues（`Miaotofu01/Study-Mate`），全部操�
 
 ## 文档在哪
 
-`docs/` 按用途分四类，另加两份不动的东西：
+`docs/` 按用途分四类，另加一处截图目录：
 
 - **`docs/使用/`** —— 学生与维护者面向：安装、日常使用、宿主说明（Antigravity、Codex 与 ChatGPT）、发布流程
 - **`docs/设计/`** —— 产品与协议视角：设计方案、可选方向探索的指南与验收
 - **`docs/规范/`** —— 唯一约束来源：工程约束、课件内容格式、文件归属
 - **`docs/agents/`** —— agent 约定层：issue tracker、triage 标签、领域文档布局
-- `docs/00TODO.md` —— 维护者的待办清单；`docs/images/` —— README 用的截图
+- `docs/images/` —— README 用的截图
+
+待办不在仓库里了：**未完成的事走 GitHub Issues**，别再建 TODO 文件。
 
 `CHANGELOG.md` 是发布流程生成的历史记录，**不要手改**。
