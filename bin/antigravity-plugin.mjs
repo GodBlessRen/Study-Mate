@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { adaptAntigravitySkill, adaptAntigravityAgent, AGENT_ROLES } from './antigravity-skill-compat.mjs';
-import { listDocMarkdown } from './docs-payload.mjs';
+import { writeDocsPayload } from './docs-payload.mjs';
 
 const source = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const marker = '.studymate-build.json';
@@ -113,12 +113,7 @@ export function buildAntigravityPlugin({ output = path.resolve('dist/antigravity
     for (const name of fs.readdirSync(path.join(source, 'scripts')).filter(name => name.endsWith('.py') && name !== 'install_preset.py')) {
       copyTree(path.join(source, 'scripts', name), path.join(plugin, 'scripts', name));
     }
-    for (const relative of listDocMarkdown(source)) {
-      const text = fs.readFileSync(path.join(source, 'docs', relative), 'utf8').replaceAll('.dsh/skills', 'skills');
-      const target = path.join(plugin, 'docs', relative);
-      fs.mkdirSync(path.dirname(target), { recursive: true });
-      fs.writeFileSync(target, text);
-    }
+    writeDocsPayload(source, plugin);
 
     copyTree(path.join(source, 'docs', 'images', 'logo.png'), path.join(plugin, 'assets', 'logo.png'));
     copyTree(path.join(source, 'LICENSE'), path.join(plugin, 'LICENSE'));

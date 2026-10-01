@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { adaptOpenAiSkill } from './openai-skill-compat.mjs';
 import { getOpenAiSkillUi } from './openai-skill-ui.mjs';
-import { listDocMarkdown } from './docs-payload.mjs';
+import { writeDocsPayload } from './docs-payload.mjs';
 
 const source = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const marker = '.studymate-build.json';
@@ -92,12 +92,7 @@ export function buildOpenAiPlugin({ output = path.resolve('dist'), python } = {}
     for (const name of fs.readdirSync(path.join(source, 'scripts')).filter(name => name.endsWith('.py') && name !== 'install_preset.py')) {
       copyTree(path.join(source, 'scripts', name), path.join(plugin, 'scripts', name));
     }
-    for (const relative of listDocMarkdown(source)) {
-      const text = fs.readFileSync(path.join(source, 'docs', relative), 'utf8').replaceAll('.dsh/skills', 'skills');
-      const target = path.join(plugin, 'docs', relative);
-      fs.mkdirSync(path.dirname(target), { recursive: true });
-      fs.writeFileSync(target, text);
-    }
+    writeDocsPayload(source, plugin);
     copyTree(path.join(source, 'docs', 'images', 'logo.png'), path.join(plugin, 'assets', 'logo.png'));
     copyTree(path.join(source, 'LICENSE'), path.join(plugin, 'LICENSE'));
     fs.writeFileSync(path.join(plugin, 'README.md'), '# StudyMate\n\nCodex / ChatGPT Work 学习插件。\n\n首次安装时导入 studymate-openai.zip；更新时下载最新 ZIP，在浏览器中打开已有插件的链接并上传新版本，随后新建任务。\n\n安装与使用见 [使用指南](docs/使用/Codex与ChatGPT.md)。\n\n本目录是已构建的完整插件，无需运行安装脚本或构建命令。学习数据应放在插件目录外。\n');

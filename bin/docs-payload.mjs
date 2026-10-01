@@ -4,10 +4,12 @@ import path from 'node:path';
 // docs/ 按用途分子目录（使用／设计／规范／agents）。装进插件与安装副本时必须保持同一相对路径，
 // 否则技能提示词里的 <root>/docs/<子目录>/<名>.md 指针会断。
 //
-// 不随包分发的两项：
+// 不随包分发：
 //   images/      —— 只有 logo.png 有用，各处单独复制到 assets/
-//   superpowers/ —— 曾经的本地工作草稿位，已按维护者决定从仓库删除；留这条守卫防止它再长回来
-const SKIP_DIRECTORIES = new Set(['images', 'superpowers', '__pycache__']);
+//   agents/      —— 仓库自己的维护者配置（issue tracker / triage 标签 / 领域文档布局）。
+//                   唯一入口 AGENTS.md 本就不在 npm files 里，发出去只会是无入口的孤儿文档
+//   __pycache__  —— 任何目录下都不发
+const SKIP_DIRECTORIES = new Set(['images', 'agents', '__pycache__']);
 
 /** 列出 docs/ 下所有要随包分发的 markdown，返回相对 docs/ 的 posix 路径。 */
 export function listDocMarkdown(source) {
@@ -26,5 +28,15 @@ export function listDocMarkdown(source) {
         found.push(relative);
       }
     }
+  }
+}
+
+/** 把要分发的那批 markdown 铺进插件的 docs/，保持相对路径，并把 `.dsh/skills` 改写成 `skills`。 */
+export function writeDocsPayload(source, pluginDirectory) {
+  for (const relative of listDocMarkdown(source)) {
+    const text = fs.readFileSync(path.join(source, 'docs', relative), 'utf8').replaceAll('.dsh/skills', 'skills');
+    const target = path.join(pluginDirectory, 'docs', relative);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, text);
   }
 }
