@@ -2,11 +2,11 @@
 
 > 状态：提案，尚未实现。对接 [Issue #22](https://github.com/Miaotofu01/Study-Mate/issues/22)。
 > 定位：给维护者一个可分阶段落地的前端演进方案。本文件只定义迁移边界与内容协议，不替换现有 HTML 引擎。
-> 产品视角仍以 [设计方案](设计方案.md) 为准，工程硬约束仍以 [工程约束](工程约束.md) 为准。课件语法仍以 [课件内容格式](课件内容格式.md) 为准。
+> 产品视角仍以 [设计方案](设计方案.md) 为准，工程硬约束仍以 [工程约束](../规范/工程约束.md) 为准。课件语法仍以 [课件内容格式](../规范/课件内容格式.md) 为准。
 
 ## 1. 为什么现在不直接换掉渲染器
 
-Issue #22 的判断是对的：Agent 更适合维护 Markdown、YAML、JSON，而不是手写完整 HTML。StudyMate 其实已经走在这条路上——讲解角色写 `lessons/*.md`，出题角色写 `*.quiz.json`，HTML 由 `scripts/render_lesson.py` 产出（见 [课件内容格式](课件内容格式.md) 开头的铁律：「模型一个字 HTML 都不写」）。
+Issue #22 的判断是对的：Agent 更适合维护 Markdown、YAML、JSON，而不是手写完整 HTML。StudyMate 其实已经走在这条路上——讲解角色写 `lessons/*.md`，出题角色写 `*.quiz.json`，HTML 由 `scripts/render_lesson.py` 产出（见 [课件内容格式](../规范/课件内容格式.md) 开头的铁律：「模型一个字 HTML 都不写」）。
 
 当前缺口不在「Agent 还在写 HTML」，而在「学生看到的页面仍是一次性渲染的静态 HTML」：
 
@@ -46,7 +46,7 @@ Issue 作者的个人原型在 [yulaoshizuikeai/Study-Mate-vue](https://github.c
 
 ## 4. 内容协议：Agent 继续写这些，前端只读
 
-学习工作区布局不变，见 [使用说明 §六](使用说明.md#六学习数据存在哪)。阅读端只消费下列文件：
+学习工作区布局不变，见 [使用说明 §六](../使用/使用说明.md#六学习数据存在哪)。阅读端只消费下列文件：
 
 | 数据 | 路径 | 阅读端用途 |
 |---|---|---|
@@ -59,7 +59,7 @@ Issue 作者的个人原型在 [yulaoshizuikeai/Study-Mate-vue](https://github.c
 
 两条硬边界：
 
-1. **源文件仍是 Markdown / YAML / JSON。** VitePress 不成为第二套课件语法。`:::` 指令、KaTeX、图片池路径继续按 [课件内容格式](课件内容格式.md) 解释。
+1. **源文件仍是 Markdown / YAML / JSON。** VitePress 不成为第二套课件语法。`:::` 指令、KaTeX、图片池路径继续按 [课件内容格式](../规范/课件内容格式.md) 解释。
 2. **前端不回写学习数据。** 进度、误解、会话摘要仍由总控按 `record-keeping` 写盘。Vue 组件只读，避免和沙箱写权限、暂存区搬运打架。
 
 ## 5. 建议组件
@@ -93,7 +93,7 @@ Issue 作者的个人原型在 [yulaoshizuikeai/Study-Mate-vue](https://github.c
 
 ### 阶段 2：组件对齐现有交互
 
-路线图着色、题目位置、公式渲染与现有 HTML 页面对齐。KaTeX 继续离线，不引入 CDN。暗色仍是默认主题，和 [工程约束 §五](工程约束.md#五前端技术选型) 一致。
+路线图着色、题目位置、公式渲染与现有 HTML 页面对齐。KaTeX 继续离线，不引入 CDN。暗色仍是默认主题，和 [工程约束 §五](../规范/工程约束.md#五前端技术选型) 一致。
 
 ### 阶段 3：再决定 HTML 是否降为导出
 
