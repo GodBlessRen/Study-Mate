@@ -28,7 +28,7 @@
 | 字段 | 含义 |
 |---|---|
 | `schema_version` | 当前固定为 `1` |
-| `role` | 五个角色之一，必须与总控实际派发角色一致 |
+| `role` | 三类 staged 角色之一（`resource-scout` / `curriculum-designer` / `practice-evaluator`），必须与总控实际派发角色一致 |
 | `subject` | 当前科目 slug |
 | `node_id` | 节点级任务写真正节点 id；科目级任务写 `null` |
 | `status` | `succeeded` / `blocked` |
@@ -36,12 +36,12 @@
 | `checks` | **本角色本轮实际执行过**的机器检查及结果；没有可运行检查时可为 `[]`，不得把没跑的检查写成 `passed` |
 | `gaps` | 仍存在但不阻塞交付的缺口；`blocked` 时必须写清阻塞原因 |
 
-`file` output 可以附 `sha256`；有则校验器会按盘上真实字节复算。不要把 `handoff.json` 自己放进 `outputs`。
+只有 `kind: file` 的 output 可以附 `sha256`；有则校验器会按盘上真实字节复算。`kind: tree` 不接受 `sha256`。不要把 `handoff.json` 自己放进 `outputs`。
 
 ## 状态语义
 
 - `succeeded`：至少有一个 output；凡写进 `checks` 的检查都必须是 `passed`。可保留**不阻塞交付**的 `gaps`。
-- `blocked`：必须在 `gaps` 里写明阻塞原因。可以保留中间产物供排障，但总控**不得合盘**。
+- `blocked`：必须在 `gaps` 里写明阻塞原因。可以保留部分产物供排障，但**凡放进 `deliver/` 的文件仍必须由 `outputs` 声明**；不准备声明的 scratch 放在 `deliver/` 之外。总控**不得合盘**。
 - 自然语言回复不能覆盖 manifest。角色说“完成了”但 manifest 缺失/非法，按未交接处理。
 
 ## outputs 路径
@@ -81,7 +81,7 @@
 任何 staged deliver 在 `cp` / 合并到正式科目目录之前，先跑：
 
 ```text
-python3 -B '<root>/scripts/check_handoff.py' '<stage_dir>' --role '<角色>' [--node '<节点id>']
+python3 -B <root>/scripts/check_handoff.py '<stage_dir>' --role '<角色>' [--node '<节点id>']
 ```
 
 - 退出 `0`：只说明**交接边界**合法，可以继续原有的复制、领域校验、渲染与档案更新。

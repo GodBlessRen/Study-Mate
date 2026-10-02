@@ -7,7 +7,7 @@
   "properties": {
     "schema_version": { "const": 1 },
     "role": {
-      "enum": ["resource-scout", "image-scout", "curriculum-designer", "learning-coach", "practice-evaluator"]
+      "enum": ["resource-scout", "curriculum-designer", "practice-evaluator"]
     },
     "subject": {
       "type": "string",

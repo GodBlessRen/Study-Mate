@@ -116,6 +116,7 @@ python3 scripts/check_curriculum.py examples/.learning/subjects/computer-network
 python3 scripts/check_lesson.py examples/.learning/subjects/linear-algebra/lessons/0001-vector.space.html --subject examples/.learning/subjects/linear-algebra --node vector.space
 python3 scripts/check_pool.py <你的科目目录>    # 图片池：索引 pool.md 与 assets/img/pool/ 对不对得上
 python3 scripts/check_skill.py .dsh/skills/*    # 技能 frontmatter（改过技能就跑一次）
+python3 scripts/check_handoff.py <stage_dir> --role <角色> [--node <节点id>]  # staged Agent 交接边界
 npm test                                     # 与 Actions 共用的功能回归
 
 # 换成你自己的科目：--subject 给科目目录，--node 给该课件对应的节点 id；大纲校验可一次传多个 curriculum.yaml
@@ -157,7 +158,7 @@ StudyMate/                     ← 本仓库：系统源码（引擎），学习
 ├── docs/                      # 文档，按用途分四类（见下）
 │   ├── 使用/                  #   安装、使用说明、Antigravity、Codex 与 ChatGPT、发布流程
 │   ├── 设计/                  #   设计方案、方向探索指南与验收
-│   ├── 规范/                  #   工程约束、课件内容格式、文件归属（唯一约束来源）
+│   ├── 规范/                  #   工程约束、课件内容格式、文件归属、Agent 交接协议（唯一约束来源）
 │   └── agents/                #   agent 约定层：issue tracker、triage 标签、领域文档布局
 ├── AGENTS.md                  # agent 入口：只放指针，指向上面各份的唯一出处
 └── workspace/                 # 可选的本地学习工作区（已被 .gitignore 忽略）
@@ -190,7 +191,7 @@ Python 不自带 PyYAML。请在系统终端复制安装器给出的依赖安装
 - **项目交流群**(QQ)：161914370
 - **参与开发**：[CONTRIBUTING.md](CONTRIBUTING.md)（改哪块先读哪份、本地怎么验、提交信息规范）
 - **变更日志**：[CHANGELOG.md](CHANGELOG.md)
-- **文档**：[使用说明](docs/使用/使用说明.md)（日常怎么用、课型与题型、检查与档案规则）· [Codex 与 ChatGPT](docs/使用/Codex与ChatGPT.md)（OpenAI 插件构建、安装与工作区）· [Antigravity 说明](docs/使用/Antigravity.md)（Antigravity 插件构建、多智能体协同与安装）· [课件内容格式](docs/规范/课件内容格式.md)（内容文件与题目位置的语法）· [文件归属](docs/规范/文件归属.md)（代称 ↔ 路径 ↔ 维护者）· [设计方案](docs/设计/设计方案.md)（产品视角）· [工程约束](docs/规范/工程约束.md)（目录约定、占位符契约、脚本一览、技术选型）· [VitePress 课程工作区](docs/设计/VitePress工作区.md)（可选阅读端提案，对接 #22）· [模板说明](templates/README.md) · [前端资源契约](templates/assets/README.md)
+- **文档**：[使用说明](docs/使用/使用说明.md)（日常怎么用、课型与题型、检查与档案规则）· [Codex 与 ChatGPT](docs/使用/Codex与ChatGPT.md)（OpenAI 插件构建、安装与工作区）· [Antigravity 说明](docs/使用/Antigravity.md)（Antigravity 插件构建、多智能体协同与安装）· [课件内容格式](docs/规范/课件内容格式.md)（内容文件与题目位置的语法）· [文件归属](docs/规范/文件归属.md)（代称 ↔ 路径 ↔ 维护者）· [Agent 交接协议](docs/规范/Agent交接协议.md)（staged 子代理交付的机器边界）· [设计方案](docs/设计/设计方案.md)（产品视角）· [工程约束](docs/规范/工程约束.md)（目录约定、占位符契约、脚本一览、技术选型）· [VitePress 课程工作区](docs/设计/VitePress工作区.md)（可选阅读端提案，对接 #22）· [模板说明](templates/README.md) · [前端资源契约](templates/assets/README.md)
 
 ### 提改动前先跑这几条
 

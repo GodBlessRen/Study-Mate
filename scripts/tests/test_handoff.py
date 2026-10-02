@@ -12,7 +12,6 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 CHECK = ROOT / "scripts" / "check_handoff.py"
-ROLES = ["resource-scout", "image-scout", "curriculum-designer", "learning-coach", "practice-evaluator"]
 TMP = Path(tempfile.mkdtemp(prefix="studymate-handoff-"))
 
 
@@ -89,13 +88,18 @@ try:
     check("undeclared deliver file fails", result.returncode == 1 and "未声明产物" in result.stderr, result.stderr)
 
     stage, manifest = write_stage("tree")
-    (stage / "deliver/lab").mkdir()
-    (stage / "deliver/lab/task.py").write_text("pass\n", encoding="utf-8")
+    (stage / "deliver/lab/src").mkdir(parents=True)
+    (stage / "deliver/lab/src/task.py").write_text("pass\n", encoding="utf-8")
     manifest["outputs"].append({"path": "lab", "kind": "tree"})
     (stage / "handoff.json").write_text(json.dumps(manifest), encoding="utf-8")
-    check("declared tree covers descendants", run(stage).returncode == 0)
+    check("declared tree covers nested descendants", run(stage).returncode == 0)
 
-    for unsafe in ("../outside.txt", "/absolute.txt", "C:/windows.txt", r"dir\\file.txt"):
+    manifest["outputs"][-1]["sha256"] = "0" * 64
+    (stage / "handoff.json").write_text(json.dumps(manifest), encoding="utf-8")
+    result = run(stage)
+    check("tree sha256 is rejected", result.returncode == 1 and "kind=file" in result.stderr, result.stderr)
+
+    for unsafe in ("../outside.txt", "/absolute.txt", "C:/windows.txt", r"dir\file.txt", "a/./b.txt", "a//b.txt"):
         stage, manifest = write_stage("unsafe-" + str(total))
         manifest["outputs"] = [{"path": unsafe, "kind": "file"}]
         (stage / "handoff.json").write_text(json.dumps(manifest), encoding="utf-8")
@@ -107,10 +111,14 @@ try:
     result = run(stage)
     check("succeeded requires passed checks", result.returncode == 1 and "not_run" in result.stderr, result.stderr)
 
-    stage, manifest = write_stage("blocked", status="blocked", outputs=[], checks=[], gaps=["官方站点拒绝访问"])
-    (stage / "deliver/curriculum.yaml").unlink()
+    stage, manifest = write_stage("blocked-partial", status="blocked", checks=[], gaps=["官方站点拒绝访问"])
     (stage / "handoff.json").write_text(json.dumps(manifest), encoding="utf-8")
-    check("blocked with gaps may have no outputs", run(stage).returncode == 0)
+    check("blocked may preserve declared partial output", run(stage).returncode == 0)
+
+    stage, manifest = write_stage("blocked-undeclared", status="blocked", outputs=[], checks=[], gaps=["官方站点拒绝访问"])
+    (stage / "handoff.json").write_text(json.dumps(manifest), encoding="utf-8")
+    result = run(stage)
+    check("blocked still rejects undeclared deliver file", result.returncode == 1 and "未声明产物" in result.stderr, result.stderr)
 
     stage, manifest = write_stage("blocked-no-gap", status="blocked", outputs=[], checks=[], gaps=[])
     (stage / "deliver/curriculum.yaml").unlink()

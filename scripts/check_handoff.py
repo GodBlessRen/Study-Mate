@@ -115,10 +115,10 @@ def safe_relative(value: str) -> PurePosixPath:
         raise HandoffError(f"output.path 必须用 /，不能含反斜杠: {value}")
     if value.startswith("/") or DRIVE_RE.match(value):
         raise HandoffError(f"output.path 必须是 deliver/ 下的相对路径: {value}")
-    path = PurePosixPath(value)
-    if not path.parts or any(part in ("", ".", "..") for part in path.parts):
+    parts = value.split("/")
+    if not parts or any(part in ("", ".", "..") for part in parts):
         raise HandoffError(f"output.path 不能含空段、. 或 ..: {value}")
-    return path
+    return PurePosixPath(*parts)
 
 
 def reject_symlink(path: Path, label: str):
@@ -217,6 +217,8 @@ def validate(stage: Path, expected_role: str, expected_node: str | None) -> dict
                 if actual != output["sha256"]:
                     raise HandoffError(f"sha256 不匹配: {rel_text}")
         else:
+            if "sha256" in output:
+                raise HandoffError(f"sha256 仅支持 kind=file: {rel_text}")
             if not resolved.is_dir():
                 raise HandoffError(f"kind=tree 但不是目录: {rel_text}")
             files = list(iter_regular_files(resolved))

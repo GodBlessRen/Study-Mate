@@ -40,6 +40,9 @@ test('exported ZIP contains complete portable skills and renders without DSH or 
   for (const unwanted of ['node_modules', '.git', 'workspace', '.dsh', 'preset', 'scripts/tests', 'scripts/install_preset.py']) {
     assert.equal(fs.existsSync(path.join(plugin, unwanted)), false, unwanted);
   }
+  const controllerSkill = fs.readFileSync(path.join(plugin, 'skills/learning-system/SKILL.md'), 'utf8');
+  assert.ok(controllerSkill.includes("<python> -X utf8 -B '<root>/scripts/check_handoff.py' '<stage_dir>' --role '<角色>'"));
+  assert.equal(controllerSkill.includes("python3 -B <root>/scripts/check_handoff.py"), false);
   const home = path.join(directory, 'empty-home');
   const workspace = path.join(directory, '学习数据');
   const env = { ...process.env, HOME: home, USERPROFILE: home, DSH_HOME: path.join(home, '.dsh'), STUDYMATE_WORKSPACE: workspace };
